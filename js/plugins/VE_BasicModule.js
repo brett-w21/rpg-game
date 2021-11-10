@@ -949,9 +949,9 @@ VictorEngine.BasicModule = VictorEngine.BasicModule || {};
         return this._homeY;
     };
 
-    Sprite_Battler.prototype.mainSprite = function() {
-        return this._mainSprite;
-    };
+//     Sprite_Battler.prototype.mainSprite = function() {
+//         return this._mainSprite;
+//     };
 
     Sprite_Battler.prototype.noEntryMove = function() {
         return this._battler && !this._battler.canMove();

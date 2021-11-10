@@ -3022,7 +3022,7 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 	Window_MateriaEquip.prototype.drawEquips = function() {
 		this.slots().forEach(function(slot, i) {
 			var adj = this.displayType() ? 2 : 1;
-			var x = 372;
+			var x = 350;
 			var y = this.lineHeight() * i * adj - this._scrollY;
 			if (slot.equip && this.actor().equips()[slot.id]) {
 				var item = this.actor().equips()[slot.id]
@@ -3150,9 +3150,9 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 	Window_MateriaEquip.prototype._createAllParts = function() {
 		Window.prototype._createAllParts.call(this);
 // 		if (VictorEngine.Parameters.MateriaSystem.CursorPriority) {
-// 			var index = this.children.indexOf(this._windowCursorSprite);
+// 			var index = this.children.indexOf(this._cursorSprite);
 // 			this.children.splice(index, 1);
-// 			this.children.splice(index + 1, 0, this._windowCursorSprite);
+// 			this.children.splice(index + 1, 0, this._cursorSprite);
 // 		}
 	};
 

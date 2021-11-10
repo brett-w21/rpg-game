@@ -16,8 +16,6 @@ Window_Base.prototype.constructor = Window_Base;
 
 Window_Base.prototype.initialize = function(rect) {
     Window.prototype.initialize.call(this);
-    console.log(this);
-    
     this.loadWindowskin();
     this.checkRectObject(rect);
     this.move(rect.x, rect.y, rect.width, rect.height);
@@ -28,8 +26,6 @@ Window_Base.prototype.initialize = function(rect) {
     this._opening = false;
     this._closing = false;
     this._dimmerSprite = null;
-    
-    console.log(this);
 };
 
 Window_Base._iconWidth  = 32;
@@ -607,7 +603,6 @@ Window_Scrollable.prototype.initialize = function(rect) {
     this._scrollBaseX = 0;
     this._scrollBaseY = 0;
     this.clearScrollStatus();
-    console.log(this);
 };
 
 Window_Scrollable.prototype.clearScrollStatus = function() {
@@ -857,7 +852,6 @@ Window_Selectable.prototype.initialize = function(rect) {
     this._doubleTouch = false;
     this._canRepeat = true;
     this.deactivate();
-    console.log(this);
 };
 
 Window_Selectable.prototype.index = function() {

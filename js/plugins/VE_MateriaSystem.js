@@ -717,6 +717,8 @@ VictorEngine.MateriaSystem = VictorEngine.MateriaSystem || {};
  * ==============================================================================
  */
 
+(function() {
+
 	//=============================================================================
 	// Parameters
 	//=============================================================================
@@ -756,7 +758,7 @@ VictorEngine.MateriaSystem = VictorEngine.MateriaSystem || {};
 	
 	VictorEngine.loadNotetagsValues = function(data, index) {
 		VictorEngine.MateriaSystem.loadNotetagsValues.call(this, data, index);
-		
+				
 		if (this.objectSelection(index, ['weapon', 'armor'])) {
 			VictorEngine.MateriaSystem.loadNotes1(data);
 		}
@@ -2433,6 +2435,7 @@ VictorEngine.MateriaSystem = VictorEngine.MateriaSystem || {};
 		this._statusWindow.show();
 	};
 	
+})();	
 
 //=============================================================================
 // Scene_MateriaEquip
@@ -2444,6 +2447,8 @@ function Scene_MateriaEquip() {
 
 Scene_MateriaEquip.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_MateriaEquip.prototype.constructor = Scene_MateriaEquip;
+
+(function() {
 	
 	Scene_MateriaEquip.prototype.initialize = function() {
 		Scene_MenuBase.prototype.initialize.call(this);
@@ -2454,14 +2459,18 @@ Scene_MateriaEquip.prototype.constructor = Scene_MateriaEquip;
 		this.createHelpWindow();
 		this.createMateriaWindow();
 		this.createEquipWindow();
-// 		this.createItemWindow();
-// 		this.refreshActor();
+		this.createItemWindow();
+		this.refreshActor();
+	};
+	
+	Scene_MateriaEquip.prototype.needsPageButtons = function() {
+    	return true;
 	};
 	
 	Scene_MateriaEquip.prototype.createHelpWindow = function() {
 		Scene_MenuBase.prototype.createHelpWindow.call(this);
 		var help = this._helpWindow;
-		help.move(help.x, 180, help.width, help.height);
+		help.move(help.x, 194, help.width, help.height);
 	};
 	
 	Scene_MateriaEquip.prototype.createMateriaWindow = function() {
@@ -2475,9 +2484,10 @@ Scene_MateriaEquip.prototype.constructor = Scene_MateriaEquip;
 	};
 
 	Scene_MateriaEquip.prototype.createEquipWindow = function() {
+		const wy = this.mainAreaTop();
 		const ww = Graphics.boxWidth;
-		const wh = 180;
-		const rect = new Rectangle(0, 0, ww, wh);		
+		const wh = 144;
+		const rect = new Rectangle(0, wy, ww, wh);
 		this._equipWindow = new Window_MateriaEquip(rect);
 		this._equipWindow.setHelpWindow(this._helpWindow);
 		this._equipWindow.setMateriaWindow(this._statusWindow);
@@ -2560,6 +2570,7 @@ Scene_MateriaEquip.prototype.constructor = Scene_MateriaEquip;
 		this._equipWindow.activate();
 	};
 
+})();
 
 //=============================================================================
 // Window_MateriaStatus
@@ -2571,6 +2582,8 @@ function Window_MateriaStatus() {
 
 Window_MateriaStatus.prototype = Object.create(Window_Base.prototype);
 Window_MateriaStatus.prototype.constructor = Window_MateriaStatus;
+
+(function() {
 
 	Window_MateriaStatus.prototype.initialize = function(rect) {
 		Window_Base.prototype.initialize.call(this, rect);
@@ -2885,6 +2898,7 @@ Window_MateriaStatus.prototype.constructor = Window_MateriaStatus;
 		}, this)
 	};
 
+})();
 
 //=============================================================================
 // Window_MateriaEquip
@@ -2897,12 +2911,18 @@ function Window_MateriaEquip() {
 Window_MateriaEquip.prototype = Object.create(Window_StatusBase.prototype);
 Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 	
+(function() {
 
 	Window_MateriaEquip.prototype.initialize = function(rect) {
 		Window_StatusBase.prototype.initialize.call(this, rect);
 		this._index = 0;
-		this.activate()
+		this.activate();
 	};
+	
+	Window_MateriaEquip._iconWidth  = 32;
+	Window_MateriaEquip._iconHeight = 32;
+	Window_MateriaEquip._faceWidth  = 144;
+	Window_MateriaEquip._faceHeight = 144;
 	
 	Window_MateriaEquip.prototype.maxCols = function() {
 		return VictorEngine.Parameters.MateriaSystem.MaxSlotNumber;
@@ -2990,12 +3010,17 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 	};
 	
 	Window_MateriaEquip.prototype.drawActor = function() {
-	// TODO
-// 		this.drawActorFace(this._actor, this.textPadding(), 0);
-// 		this.drawActorName(this._actor, 160, 0);
-// 		this.drawActorLevel(this._actor, 160, this.lineHeight() * 1);
-// 		this.drawActorHp(this._actor, 160, this.lineHeight() * 2);
-// 		this.drawActorMp(this._actor, 160, this.lineHeight() * 3);
+		this.drawActorFace(this._actor, 0, 0, Window_MateriaEquip._faceWidth, Window_MateriaEquip._faceHeight);
+	
+    	const lineHeight = this.lineHeight();
+    	const x = 0;
+    	const y = 0;
+    	const x2 = x + 150;
+    	this.placeActorName(this._actor, x2, y);
+//     	this.drawActorLevel(this._actor, x, y + lineHeight * 1);
+//     	this.drawActorIcons(this._actor, x, y + lineHeight * 2);
+//     	this.drawActorClass(this._actor, x2, y);
+    	this.placeBasicGauges(this._actor, x2, y + lineHeight);
 	}
 	
 	Window_MateriaEquip.prototype.drawEquips = function() {
@@ -3073,7 +3098,7 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 	};
 	
 	Window_MateriaEquip.prototype.itemWidth = function() {
-		return Window_Base._iconWidth;
+		return Window_MateriaEquip._iconWidth;
 	};
 	
 	Window_MateriaEquip.prototype.itemHeight = function() {
@@ -3085,8 +3110,8 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 		var adj  = this.displayType() ? this.lineHeight() : 0;
 		var rect = new Rectangle();
 		var maxCols = this.maxCols();
-		rect.width  = Window_Base._iconWidth;
-		rect.height = Window_Base._iconHeight;
+		rect.width  = Window_MateriaEquip._iconWidth;
+		rect.height = Window_MateriaEquip._iconHeight;
 		rect.x = this.materiaX() + index % maxCols * this.itemWidth() - this._scrollX;
 		rect.y = Math.floor(index / maxCols) * this.itemHeight() - this._scrollY + adj;
 		return rect;
@@ -3118,7 +3143,7 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 	Window_MateriaEquip.prototype.handlerClear = function() {
 		return this.isHandled('clear') && this.materia();
 	};
-		
+
 	Window_MateriaEquip.prototype.updateHelp = function() {
 		if (this._materiaWindow) {
 			this._materiaWindow.setMateria(this.materia());
@@ -3128,11 +3153,11 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 
 	Window_MateriaEquip.prototype._createAllParts = function() {
 		Window.prototype._createAllParts.call(this);
-		if (VictorEngine.Parameters.MateriaSystem.CursorPriority) {
-			var index = this.children.indexOf(this._windowCursorSprite);
-			this.children.splice(index, 1);
-			this.children.splice(index + 1, 0, this._windowCursorSprite);
-		}
+// 		if (VictorEngine.Parameters.MateriaSystem.CursorPriority) {
+// 			var index = this.children.indexOf(this._windowCursorSprite);
+// 			this.children.splice(index, 1);
+// 			this.children.splice(index + 1, 0, this._windowCursorSprite);
+// 		}
 	};
 
 	Window_MateriaEquip.prototype.cursorDown = function() {
@@ -3166,7 +3191,8 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 		this.select((Math.floor(index / maxCols) * maxCols + ((index - 1 + maxCols) % maxCols)) % maxItems);
 		this.refresh();
 	};
-	
+
+})();
 
 //=============================================================================
 // Window_MateriaList
@@ -3178,7 +3204,9 @@ function Window_MateriaList() {
 
 Window_MateriaList.prototype = Object.create(Window_Selectable.prototype);
 Window_MateriaList.prototype.constructor = Window_MateriaList;
-	
+
+(function() {
+
 	Window_MateriaList.prototype.initialize = function(rect) {
 		Window_Selectable.prototype.initialize.call(this, rect);
 	};
@@ -3221,6 +3249,7 @@ Window_MateriaList.prototype.constructor = Window_MateriaList;
 		this.setHelpWindowItem(this.item());
 	};
 
+})();
 
 //=============================================================================
 // Window_MateriaItem
@@ -3232,7 +3261,9 @@ function Window_MateriaItem() {
 
 Window_MateriaItem.prototype = Object.create(Window_MateriaList.prototype);
 Window_MateriaItem.prototype.constructor = Window_MateriaItem;
-	
+
+(function() {
+
 	Window_MateriaItem.prototype.initialize = function(rect) {
 		Window_MateriaList.prototype.initialize.call(this, rect);
 	};
@@ -3300,6 +3331,7 @@ Window_MateriaItem.prototype.constructor = Window_MateriaItem;
 		return true;
 	};
 	
+})();
 
 //=============================================================================
 // Window_MateriaShop
@@ -3311,7 +3343,9 @@ function Window_MateriaShop() {
 
 Window_MateriaShop.prototype = Object.create(Window_MateriaList.prototype);
 Window_MateriaShop.prototype.constructor = Window_MateriaShop;
-	
+
+(function() {
+
 	Window_MateriaShop.prototype.initialize = function(rect) {
 		Window_MateriaList.prototype.initialize.call(this, rect);
 	};
@@ -3330,6 +3364,8 @@ Window_MateriaShop.prototype.constructor = Window_MateriaShop;
 		return item && item.price() > 0 && !$gameParty.maxMaterias();
 	};
 
+})();
+
 //=============================================================================
 // Game_Materia
 //=============================================================================
@@ -3339,6 +3375,8 @@ function Game_Materia() {
 }
 
 Game_Materia.prototype.constructor = Game_Materia;
+
+(function() {
 
 	Game_Materia.prototype.initialize = function(id) {
 		this._id = id;
@@ -3705,6 +3743,8 @@ Game_Materia.prototype.constructor = Game_Materia;
 	Game_Materia.prototype.sparam = function(sparamId) {
 		return this.effectRate(VictorEngine.sparamName(sparamId)) || 0;
 	};
+	
+})();
 
 //=============================================================================
 // Window_VictoryAp

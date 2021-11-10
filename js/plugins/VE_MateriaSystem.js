@@ -2919,10 +2919,6 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 		this.activate();
 	};
 	
-	Window_MateriaEquip._iconWidth  = 32;
-	Window_MateriaEquip._iconHeight = 32;
-	Window_MateriaEquip._faceWidth  = 144;
-	Window_MateriaEquip._faceHeight = 144;
 	
 	Window_MateriaEquip.prototype.maxCols = function() {
 		return VictorEngine.Parameters.MateriaSystem.MaxSlotNumber;
@@ -3098,7 +3094,7 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 	};
 	
 	Window_MateriaEquip.prototype.itemWidth = function() {
-		return Window_MateriaEquip._iconWidth;
+		return Window_Base._iconWidth;
 	};
 	
 	Window_MateriaEquip.prototype.itemHeight = function() {
@@ -3110,8 +3106,8 @@ Window_MateriaEquip.prototype.constructor = Window_MateriaEquip;
 		var adj  = this.displayType() ? this.lineHeight() : 0;
 		var rect = new Rectangle();
 		var maxCols = this.maxCols();
-		rect.width  = Window_MateriaEquip._iconWidth;
-		rect.height = Window_MateriaEquip._iconHeight;
+		rect.width  = Window_Base._iconWidth;
+		rect.height = Window_Base._iconHeight;
 		rect.x = this.materiaX() + index % maxCols * this.itemWidth() - this._scrollX;
 		rect.y = Math.floor(index / maxCols) * this.itemHeight() - this._scrollY + adj;
 		return rect;

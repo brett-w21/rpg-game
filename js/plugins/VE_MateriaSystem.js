@@ -1321,7 +1321,7 @@ VictorEngine.MateriaSystem = VictorEngine.MateriaSystem || {};
 		
 	VictorEngine.MateriaSystem.changeEquipById = Game_Actor.prototype.changeEquipById;
 	Game_Actor.prototype.changeEquipById = function(etypeId, itemId) {
-		if (this.equipSlots()[etypeId - 1] !== 1 && $dataArmors[itemId].isMateria) {
+		if (this.equipSlots()[etypeId - 1] !== 1 && $dataArmors[itemId] !== null && $dataArmors[itemId].isMateria) {
 			this.changeMateriaById(itemId);
 		} else {
 			VictorEngine.MateriaSystem.changeEquipById.call(this, etypeId, itemId)

@@ -356,10 +356,10 @@
   };
 
   Window_KSMInfo.prototype.refresh = async function() {
+    this.contents.clear();
     this.contents.fontSize = 16;
     if (_ksmInfo.address) {
       const balance = await getMyBalance(_ksmInfo.address);
-      console.log(balance);
       this.drawText("Address: " + _ksmInfo.address, 0, -10, this.width, "left");
       this.drawText("Balance: " + balance.balance, 0, 10, this.width, "left");
     } else {

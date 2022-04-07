@@ -10,18 +10,100 @@
     }
   }
 
-  let _ksmInfo = {
-    address: "",
-    mnemonic: "",
+  // Data Manager
+
+  $ksmInfo = null;
+
+  function KSMInfo() {
+    this.initialize(...arguments);
+  }
+
+  KSMInfo.prototype.initialize = function() {
+    this.address = "";
+    this.mnemonic = "";
   };
-  StorageManager.loadObject("ksmInfo").then(ksmInfo => {
-    _ksmInfo = ksmInfo;
-  }).catch(() => {
-    _ksmInfo = {
-      address: "",
-      mnemonic: ""
-    };
-  });
+
+  data_manager_create_gameobjects_alias = DataManager.createGameObjects;
+  DataManager.createGameObjects = function() {
+    data_manager_create_gameobjects_alias.call(this);
+    $ksmInfo = new KSMInfo();
+  };
+
+  data_manager_make_save_contents_alias = DataManager.makeSaveContents;
+  DataManager.makeSaveContents = function() {
+    const contents = data_manager_make_save_contents_alias.call(this);
+    contents.ksmInfo = $ksmInfo;
+    return contents;
+  };
+
+  data_manager_extract_save_contents_alias = DataManager.extractSaveContents;
+  DataManager.extractSaveContents = function(contents) {
+    data_manager_extract_save_contents_alias.call(this, contents);
+    $ksmInfo = contents.ksmInfo;
+  };
+
+  data_manager_load_game_alias = DataManager.loadGame;
+  DataManager.loadGame = async function(savefileId) {
+    const result = await data_manager_load_game_alias.call(this, savefileId);
+
+    // validate ksm address
+    if (!$ksmInfo || !$ksmInfo.address) {
+      const response = await getNewAddress();
+      $ksmInfo = {
+        address: response.address,
+        mnemonic: response.mnemonic
+      };
+    }
+
+    // loading nft
+    const nfts = JSON.parse(await getMyNfts($ksmInfo.address));
+//     const nfts = JSON.parse(await getMyNftsTemp($ksmInfo.address));
+
+    // updating database
+    for (let nft of nfts) {
+      const metadata = JSON.parse(nft.metadata);
+      const gameItemValue = metadata.properties.gameData.value;
+      gameItemValue.id += 51;
+      $dataWeapons[gameItemValue.id] = gameItemValue;
+    }
+
+    const pathLib = require("path");
+    let path = pathLib.dirname(process.mainModule.filename);
+    path = pathLib.join(path, "data/Weapons.json");
+    const weaponsRaw = "[\n" + $dataWeapons.map(entry => JSON.stringify(entry)).join(",\n") + "\n]"
+    StorageManager.fsWriteFile(path, weaponsRaw);
+
+    // updating player inventory
+    // TODO
+
+    return result;
+  };
+
+  async function getMyNftsTemp() {
+    return new Promise(function (resolve, reject) {
+      const xhr = new XMLHttpRequest();
+      const url = "nfts.json";
+      xhr.open("GET", url);
+      xhr.overrideMimeType("application/json");
+      xhr.onload = function () {
+        if (this.status >= 200 && this.status < 300) {
+          resolve(xhr.response);
+        } else {
+          reject({
+            status: this.status,
+            statusText: xhr.statusText
+          });
+        }
+      };
+      xhr.onerror  = function () {
+        reject({
+          status: this.status,
+          statusText: xhr.statusText
+        });
+      };
+      xhr.send();
+    });
+  }
 
   // Scenes
 
@@ -58,23 +140,13 @@
   };
 
   Scene_SelectKSMAddress.prototype.commandNewKSMAddress = async function () {
-    const response = await getNewAddress();
-
-    if (response.address && response.mnemonic) {
-      _ksmInfo.address = response.address;
-      _ksmInfo.mnemonic = response.mnemonic;
-    } else {
-      _ksmInfo.address = "";
-      _ksmInfo.mnemonic = "";
-    }
-
-    StorageManager.saveObject("ksmInfo", _ksmInfo);
-    console.log("New game, ksm address: " + _ksmInfo.address + ", ksm mnemonic: " + _ksmInfo.mnemonic);
-
-    // new game
     DataManager.setupNewGame();
-    this._selectNFTAddress.close();
     this.fadeOutAll();
+
+    const response = await getNewAddress();
+    $ksmInfo.address = response.address;
+    $ksmInfo.mnemonic = response.mnemonic;
+
     SceneManager.goto(Scene_Map);
   };
 
@@ -149,26 +221,95 @@
   };
 
   Scene_NFTPhrase.prototype.onInputOk = async function() {
+    DataManager.setupNewGame();
+    this.fadeOutAll();
+
     const response = await getNewAddressFromMnemonic(this._editWindow.phrase());
 
     if (response.address) {
-      _ksmInfo.address = response.address;
-      _ksmInfo.mnemonic = this._editWindow.phrase();
+      $ksmInfo.address = response.address;
+      $ksmInfo.mnemonic = this._editWindow.phrase();
     } else {
-      _ksmInfo.address = "";
-      _ksmInfo.mnemonic = "";
+      const newAddress = await getNewAddress();
+      $ksmInfo.address = newAddress.address;
+      $ksmInfo.mnemonic = newAddress.mnemonic;
     }
 
-    StorageManager.saveObject("ksmInfo", _ksmInfo);
-    console.log("New game, ksm address: " + _ksmInfo.address + ", ksm mnemonic: " + _ksmInfo.mnemonic);
-
-    // new game
-    DataManager.setupNewGame();
-    this.fadeOutAll();
     SceneManager.goto(Scene_Map);
   };
 
   // Windows
+
+  //-----------------------------------------------------------------------------
+  // Window_KSMAddress
+  //
+
+  function Window_KSMAddress() {
+    this.initialize(...arguments);
+  }
+
+  Window_KSMAddress.prototype = Object.create(Window_Base.prototype);
+  Window_KSMAddress.prototype.constructor = Window_KSMAddress;
+
+  Window_KSMAddress.prototype.initialize = function (rect) {
+    Window_Base.prototype.initialize.call(this, rect);
+    this.refresh();
+  };
+
+  Window_KSMAddress.prototype.refresh = async function() {
+    this.contents.clear();
+    this.contents.fontSize = 16;
+    this.drawText("address: " + $ksmInfo.address, 0, -5, this.width, "center");
+  };
+
+  Window_KSMAddress.prototype._refreshBack = function() {
+
+  };
+
+  Window_KSMAddress.prototype._refreshFrame = function() {
+
+  };
+
+  //-----------------------------------------------------------------------------
+  // Window_KSMBalance
+  //
+
+  function Window_KSMBalance() {
+    this.initialize(...arguments);
+  }
+
+  Window_KSMBalance.prototype = Object.create(Window_Selectable.prototype);
+  Window_KSMBalance.prototype.constructor = Window_KSMBalance;
+
+  Window_KSMBalance.prototype.initialize = function(rect) {
+    Window_Selectable.prototype.initialize.call(this, rect);
+    this.refresh();
+  };
+
+  Window_KSMBalance.prototype.colSpacing = function() {
+    return 0;
+  };
+
+  Window_KSMBalance.prototype.refresh = async function() {
+    let balance = 0;
+    balance = (await getMyBalance($ksmInfo.address)).balance / 1000000;
+
+    const rect = this.itemLineRect(0);
+    const x = rect.x;
+    const y = rect.y;
+    const width = rect.width;
+    this.contents.clear();
+    this.drawCurrencyValue(balance, this.currencyUnit(), x, y, width);
+  };
+
+  Window_KSMBalance.prototype.currencyUnit = function() {
+    return "KSM";
+  };
+
+  Window_KSMBalance.prototype.open = function() {
+    this.refresh();
+    Window_Selectable.prototype.open.call(this);
+  };
 
   //-----------------------------------------------------------------------------
   // Window_PhraseEdit
@@ -331,42 +472,37 @@
   // Window_KSMInfo
   //
 
-  function Window_KSMInfo() {
-    this.initialize(...arguments);
-  }
-
-  Window_KSMInfo.prototype = Object.create(Window_Base.prototype);
-  Window_KSMInfo.prototype.constructor = Window_SelectNFTAddress;
-
-  Window_KSMInfo.prototype.initialize = function (rect) {
-    Window_Base.prototype.initialize.call(this, rect);
-    this._updateKSMTD = 0;
-  };
-
-  Window_KSMInfo.prototype.update = function () {
-    Window_Base.prototype.update.call(this);
-
-    if (this.visible) {
-      this._updateKSMTD -= SceneManager._smoothDeltaTime / 100;
-      if (this._updateKSMTD <= 0) {
-        this._updateKSMTD = 20;
-        this.refresh();
-      }
-    }
-  };
-
-  Window_KSMInfo.prototype.refresh = async function() {
-    this.contents.clear();
-    this.contents.fontSize = 16;
-    if (_ksmInfo.address) {
-      const balance = await getMyBalance(_ksmInfo.address);
-      this.drawText("Address: " + _ksmInfo.address, 0, -10, this.width, "left");
-      this.drawText("Balance: " + balance.balance, 0, 10, this.width, "left");
-    } else {
-      this.drawText("Address: none", 0, -10, this.width, "left");
-      this.drawText("Balance: 0", 0, 10, this.width, "left");
-    }
-  };
+  // function Window_KSMInfo() {
+  //   this.initialize(...arguments);
+  // }
+  //
+  // Window_KSMInfo.prototype = Object.create(Window_Base.prototype);
+  // Window_KSMInfo.prototype.constructor = Window_SelectNFTAddress;
+  //
+  // Window_KSMInfo.prototype.initialize = function (rect) {
+  //   Window_Base.prototype.initialize.call(this, rect);
+  //   this._updateKSMTD = 0;
+  // };
+  //
+  // Window_KSMInfo.prototype.update = function () {
+  //   Window_Base.prototype.update.call(this);
+  //
+  //   if (this.visible) {
+  //     this._updateKSMTD -= SceneManager._smoothDeltaTime / 100;
+  //     if (this._updateKSMTD <= 0) {
+  //       this._updateKSMTD = 20;
+  //       this.refresh();
+  //     }
+  //   }
+  // };
+  //
+  // Window_KSMInfo.prototype.refresh = async function() {
+  //   this.contents.clear();
+  //   this.contents.fontSize = 16;
+  //   const balance = await getMyBalance($ksmInfo.address);
+  //   this.drawText("Address: " + $ksmInfo.address, 0, -10, this.width, "left");
+  //   this.drawText("Balance: " + balance.balance, 0, 10, this.width, "left");
+  // };
 
   // RMMZ Overrides
 
@@ -409,23 +545,60 @@
     }
   };
 
+  // Scene_Menu
+
+  const scene_menu_create_alias = Scene_Menu.prototype.create;
+  Scene_Menu.prototype.create = function() {
+    scene_menu_create_alias.call(this);
+    this.createKSMBalanceWindow();
+    this.createKSMAddressWindow();
+  };
+
+  Scene_Menu.prototype.createKSMBalanceWindow = function() {
+    const rect = this.ksmBalanceWindowRect();
+    this._ksmBalanceWindow = new Window_KSMBalance(rect);
+    this.addWindow(this._ksmBalanceWindow);
+  };
+
+  Scene_Menu.prototype.ksmBalanceWindowRect = function() {
+    const ww = this.mainCommandWidth();
+    const wh = this.calcWindowHeight(1, true);
+    const wx = this.isRightInputMode() ? Graphics.boxWidth - ww : 0;
+    const wy = this.mainAreaBottom() - wh - wh;
+    return new Rectangle(wx, wy, ww, wh);
+  };
+
+  Scene_Menu.prototype.createKSMAddressWindow = function() {
+    const rect = this.ksmAddressWindowRect();
+    this._ksmAddressWindow = new Window_KSMAddress(rect);
+    this.addWindow(this._ksmAddressWindow);
+  };
+
+  Scene_Menu.prototype.ksmAddressWindowRect = function() {
+    const ww = Graphics.boxWidth - this._cancelButton.width - 4;
+    const wh = 50;
+    const wx = 0;
+    const wy = 0;
+    return new Rectangle(wx, wy, ww, wh);
+  };
+
   // Scene_Title
 
   const scene_title_create_alias = Scene_Title.prototype.create;
   Scene_Title.prototype.create = async function() {
     scene_title_create_alias.call(this);
 
-    this.createKSMInfo();
-    await waitForInit();
-    this._windowKSMInfo.show();
+    // this.createKSMInfo();
+    // await waitForInit();
+    // this._windowKSMInfo.show();
   };
 
-  Scene_Title.prototype.createKSMInfo = function() {
-    const rect = new Rectangle(0, 0, 500, 60);
-    this._windowKSMInfo = new Window_KSMInfo(rect)
-    this._windowKSMInfo.hide();
-    this.addWindow(this._windowKSMInfo);
-  };
+  // Scene_Title.prototype.createKSMInfo = function() {
+  //   const rect = new Rectangle(0, 0, 500, 60);
+  //   this._windowKSMInfo = new Window_KSMInfo(rect)
+  //   this._windowKSMInfo.hide();
+  //   this.addWindow(this._windowKSMInfo);
+  // };
 
   Scene_Title.prototype.createCommandWindow = function () {
     const background = $dataSystem.titleCommandWindow.background;
@@ -448,7 +621,5 @@
     await waitForInit();
     this._commandWindow.close();
     SceneManager.push(Scene_Load);
-
-    console.log("Game loaded, ksm address: " + _ksmInfo.address + ", ksm mnemonic: " + _ksmInfo.mnemonic);
   };
 })();

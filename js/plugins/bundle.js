@@ -70222,9 +70222,28 @@ window.getMyBalance = async address => {
       },
       nonce: previousNonce
     } = await api.query.system.account(address);
+    let balance = (BigInt(previousFree.toHuman().split(",").join('')) / BigInt(1000000)).toString();
+    let balanceString = balance;
+    let phraseIndex = 0;
+    let phrases = ["", " K", " M", " B", " T"];
+
+    while (balanceString >= BigInt(1000000)) {
+      balanceString /= 1000000;
+      phraseIndex++;
+    }
+
+    balanceString = balanceString.toString().split(".");
+
+    if (balanceString.length > 1) {
+      balanceString[1] = balanceString[1].substr(0, 2);
+    }
+
+    balanceString = balanceString.join('.');
+    balanceString += phrases[phraseIndex];
     return {
       b: previousFree,
-      balance: previousFree.toHuman(),
+      balanceHuman: previousFree.toHuman(),
+      balance: balanceString,
       n: previousNonce,
       nonce: previousNonce.toHuman()
     };

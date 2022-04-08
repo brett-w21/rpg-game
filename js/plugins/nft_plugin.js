@@ -1,4 +1,6 @@
 (() => {
+  // Common
+
   let initialized = false;
   initializeVeilOfTimeNft("ws://143.198.116.85:9944", "http://143.198.116.85:3000", 2).then(() => {
     initialized = true;
@@ -10,76 +12,65 @@
     }
   }
 
-  // Data Manager
-
-  $ksmInfo = null;
-
-  function KSMInfo() {
-    this.initialize(...arguments);
-  }
-
-  KSMInfo.prototype.initialize = function() {
-    this.address = "";
-    this.mnemonic = "";
-  };
-
-  data_manager_create_gameobjects_alias = DataManager.createGameObjects;
-  DataManager.createGameObjects = function() {
-    data_manager_create_gameobjects_alias.call(this);
-    $ksmInfo = new KSMInfo();
-  };
-
-  data_manager_make_save_contents_alias = DataManager.makeSaveContents;
-  DataManager.makeSaveContents = function() {
-    const contents = data_manager_make_save_contents_alias.call(this);
-    contents.ksmInfo = $ksmInfo;
-    return contents;
-  };
-
-  data_manager_extract_save_contents_alias = DataManager.extractSaveContents;
-  DataManager.extractSaveContents = function(contents) {
-    data_manager_extract_save_contents_alias.call(this, contents);
-    $ksmInfo = contents.ksmInfo;
-  };
-
-  data_manager_load_game_alias = DataManager.loadGame;
-  DataManager.loadGame = async function(savefileId) {
-    const result = await data_manager_load_game_alias.call(this, savefileId);
-
-    // validate ksm address
-    if (!$ksmInfo || !$ksmInfo.address) {
-      const response = await getNewAddress();
-      $ksmInfo = {
-        address: response.address,
-        mnemonic: response.mnemonic
-      };
-    }
-
-    // loading nft
-    const nfts = JSON.parse(await getMyNfts($ksmInfo.address));
-//     const nfts = JSON.parse(await getMyNftsTemp($ksmInfo.address));
-
-    // updating database
+  function updateDatabaseWithNFTS(nfts) {
+    const newItems = [];
     for (let nft of nfts) {
       const metadata = JSON.parse(nft.metadata);
       const gameItemValue = metadata.properties.gameData.value;
       gameItemValue.id += 51;
       $dataWeapons[gameItemValue.id] = gameItemValue;
+      newItems.push(gameItemValue);
     }
+    return newItems;
+  }
 
-    const pathLib = require("path");
-    let path = pathLib.dirname(process.mainModule.filename);
-    path = pathLib.join(path, "data/Weapons.json");
-    const weaponsRaw = "[\n" + $dataWeapons.map(entry => JSON.stringify(entry)).join(",\n") + "\n]"
-    StorageManager.fsWriteFile(path, weaponsRaw);
-
+  function updateInventoryWithNFTS(newItems) {
     // updating player inventory
-    // TODO
+    for (let newItem of newItems) {
+      let itemExistsInInventory = false;
 
-    return result;
-  };
+      // check inventory
+      for (let weaponId of Object.keys($gameParty._weapons)) {
+        if (weaponId === newItem.id) {
+          itemExistsInInventory = true;
+          break;
+        }
+      }
 
-  async function getMyNftsTemp() {
+      if (itemExistsInInventory) {
+        continue;
+      }
+
+      // check equipped items
+      let itemEquippedInAnyActor = false;
+
+      for (let actorId of $gameParty._actors) {
+        const actor = $gameActors.actor(actorId);
+        let itemEquippedInActor = false;
+
+        for (let gameItem of actor._equips) {
+          if (gameItem._dataClass === "weapon" && gameItem._itemId === newItem.id) {
+            itemEquippedInActor = true;
+            break
+          }
+        }
+
+        if (itemEquippedInActor) {
+          itemEquippedInAnyActor = true;
+          break;
+        }
+      }
+
+      if (itemEquippedInAnyActor) {
+        continue;
+      }
+
+      // adding new item
+      $gameParty._weapons[newItem.id] = 1;
+    }
+  }
+
+  async function getMyNFTSTemp() {
     return new Promise(function (resolve, reject) {
       const xhr = new XMLHttpRequest();
       const url = "nfts.json";
@@ -103,6 +94,203 @@
       };
       xhr.send();
     });
+  }
+
+  // Data Manager
+
+  $ksmInfo = null;
+  $ksmCachedBalance = 0;
+
+  function KSMInfo() {
+    this.initialize(...arguments);
+  }
+
+  KSMInfo.prototype.initialize = function() {
+    this.address = "";
+    this.mnemonic = "";
+  };
+
+  const data_manager_create_gameobjects_alias = DataManager.createGameObjects;
+  DataManager.createGameObjects = function() {
+    data_manager_create_gameobjects_alias.call(this);
+    $ksmInfo = new KSMInfo();
+  };
+
+  const data_manager_make_save_contents_alias = DataManager.makeSaveContents;
+  DataManager.makeSaveContents = function() {
+    const contents = data_manager_make_save_contents_alias.call(this);
+    contents.ksmInfo = $ksmInfo;
+    return contents;
+  };
+
+  const data_manager_extract_save_contents_alias = DataManager.extractSaveContents;
+  DataManager.extractSaveContents = function(contents) {
+    data_manager_extract_save_contents_alias.call(this, contents);
+    $ksmInfo = contents.ksmInfo;
+  };
+
+  const data_manager_setup_newgame = DataManager.setupNewGame;
+  DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
+    data_manager_setup_newgame.call(this);
+
+    if (!isCustom) {
+      return;
+    }
+
+    await waitForInit();
+
+    if (ksmPhrase) {
+      const response = await getNewAddressFromMnemonic(this._editWindow.phrase());
+
+      if (response.address) {
+        $ksmInfo.address = response.address;
+        $ksmInfo.mnemonic = this._editWindow.phrase();
+      }
+    }
+
+    if (!$ksmInfo || !$ksmInfo.address) {
+      const response = await getNewAddress();
+      $ksmInfo.address = response.address;
+      $ksmInfo.mnemonic = response.mnemonic;
+    }
+
+    // loading nft
+    const nfts = JSON.parse(await getMyNfts($ksmInfo.address));
+    //const nfts = JSON.parse(await getMyNFTSTemp($ksmInfo.address));
+
+    // updating database
+    const newItems = updateDatabaseWithNFTS(nfts);
+
+    // updating inventory
+    updateInventoryWithNFTS(newItems);
+  };
+
+  const data_manager_load_game_alias = DataManager.loadGame;
+  DataManager.loadGame = async function(savefileId) {
+    await waitForInit();
+
+    // read and validate ksm address
+    const saveName = this.makeSavename(savefileId);
+    const contents = (await StorageManager.loadObject(saveName));
+    let ksmInfo = contents.ksmInfo;
+    let ksmInfoFixed = false;
+
+    if (!ksmInfo || !ksmInfo.address) {
+      const response = await getNewAddress();
+      ksmInfo = {
+        address: response.address,
+        mnemonic: response.mnemonic
+      };
+      ksmInfoFixed = true;
+    }
+
+    // loading nft
+    const nfts = JSON.parse(await getMyNfts(ksmInfo.address));
+    //const nfts = JSON.parse(await getMyNFTSTemp(ksmInfo.address));
+
+    // updating database
+    const newItems = updateDatabaseWithNFTS(nfts);
+
+    // original loading
+    const result = await data_manager_load_game_alias.call(this, savefileId);
+
+    // try apply fixed ksm info
+    if (ksmInfoFixed) {
+      $ksmInfo = ksmInfo;
+    }
+
+    // updating inventory
+    updateInventoryWithNFTS(newItems);
+
+    return result;
+  };
+
+  // Update Loop
+
+  UpdateNFTLoop();
+
+  function UpdateNFTLoop() {
+    // if we are in scene title
+    if (!SceneManager._scene || SceneManager._scene instanceof Scene_Title) {
+      NextUpdateNFTLoop();
+      return;
+    }
+
+    // if there no info about ksm
+    if (!$ksmInfo || !$ksmInfo.address) {
+      NextUpdateNFTLoop();
+      return;
+    }
+
+    UpdateNFTLoopBody();
+    NextUpdateNFTLoop();
+  }
+
+  function NextUpdateNFTLoop() {
+    setTimeout(UpdateNFTLoop, 30000);
+  }
+
+  async function UpdateNFTLoopBody() {
+    $ksmCachedBalance = (await getMyBalance($ksmInfo.address)).balance;
+    OnBalanceUpdate($ksmCachedBalance);
+
+    // loading nft
+    const nfts = JSON.parse(await getMyNfts($ksmInfo.address));
+    //const nfts = JSON.parse(await getMyNFTSTemp($ksmInfo.address));
+    // updating database
+    const newItems = updateDatabaseWithNFTS(nfts);
+    // updating inventory
+    updateInventoryWithNFTS(newItems);
+    OnNewNFTItems();
+  }
+
+  // Events
+
+  const _balanceUpdateReceivers = [];
+  const _newNFTItemsReceivers = [];
+
+  function SubscribeToBalanceUpdate(receiver) {
+    const index = _balanceUpdateReceivers.indexOf(receiver);
+    if (index < 0) {
+      _balanceUpdateReceivers.push(receiver);
+    }
+  }
+
+  function SubscribeToNewNFTItems(receiver) {
+    const index = _newNFTItemsReceivers.indexOf(receiver);
+    if (index < 0) {
+      _newNFTItemsReceivers.push(receiver);
+    }
+  }
+
+  function UnsubscribeFromBalanceUpdate(receiver) {
+    const index = _balanceUpdateReceivers.indexOf(receiver);
+    if (index > -1) {
+      _balanceUpdateReceivers.splice(index, 1);
+    }
+  }
+
+  function UnsubscribeFromNewNFTItems(receiver) {
+    const index = _newNFTItemsReceivers.indexOf(receiver);
+    if (index > -1) {
+      _newNFTItemsReceivers.splice(index, 1);
+    }
+  }
+
+  function OnBalanceUpdate(balance) {
+    for (let receiver of _balanceUpdateReceivers) {
+      if (receiver.OnBalanceUpdate) {
+        receiver.OnBalanceUpdate(balance);
+      }
+    }
+  }
+
+  function OnNewNFTItems() {
+    for (let receiver of _newNFTItemsReceivers) {
+      if (receiver.OnNewNFTItems) {
+        receiver.OnNewNFTItems();
+      }
+    }
   }
 
   // Scenes
@@ -140,13 +328,8 @@
   };
 
   Scene_SelectKSMAddress.prototype.commandNewKSMAddress = async function () {
-    DataManager.setupNewGame();
     this.fadeOutAll();
-
-    const response = await getNewAddress();
-    $ksmInfo.address = response.address;
-    $ksmInfo.mnemonic = response.mnemonic;
-
+    await DataManager.setupNewGame(true);
     SceneManager.goto(Scene_Map);
   };
 
@@ -221,20 +404,8 @@
   };
 
   Scene_NFTPhrase.prototype.onInputOk = async function() {
-    DataManager.setupNewGame();
     this.fadeOutAll();
-
-    const response = await getNewAddressFromMnemonic(this._editWindow.phrase());
-
-    if (response.address) {
-      $ksmInfo.address = response.address;
-      $ksmInfo.mnemonic = this._editWindow.phrase();
-    } else {
-      const newAddress = await getNewAddress();
-      $ksmInfo.address = newAddress.address;
-      $ksmInfo.mnemonic = newAddress.mnemonic;
-    }
-
+    await DataManager.setupNewGame(true, this._editWindow.phrase());
     SceneManager.goto(Scene_Map);
   };
 
@@ -284,6 +455,12 @@
   Window_KSMBalance.prototype.initialize = function(rect) {
     Window_Selectable.prototype.initialize.call(this, rect);
     this.refresh();
+    SubscribeToBalanceUpdate(this);
+  };
+
+  Window_KSMBalance.prototype.destroy = function(options) {
+    UnsubscribeFromBalanceUpdate(this);
+    Window_Selectable.prototype.destroy.call(this, options);
   };
 
   Window_KSMBalance.prototype.colSpacing = function() {
@@ -291,24 +468,20 @@
   };
 
   Window_KSMBalance.prototype.refresh = async function() {
-    let balance = 0;
-    balance = (await getMyBalance($ksmInfo.address)).balance / 1000000;
-
     const rect = this.itemLineRect(0);
     const x = rect.x;
     const y = rect.y;
     const width = rect.width;
     this.contents.clear();
-    this.drawCurrencyValue(balance, this.currencyUnit(), x, y, width);
+    this.drawCurrencyValue($ksmCachedBalance, this.currencyUnit(), x, y, width);
   };
 
   Window_KSMBalance.prototype.currencyUnit = function() {
     return "KSM";
   };
 
-  Window_KSMBalance.prototype.open = function() {
+  Window_KSMBalance.prototype.OnBalanceUpdate = function (balance) {
     this.refresh();
-    Window_Selectable.prototype.open.call(this);
   };
 
   //-----------------------------------------------------------------------------
@@ -557,6 +730,7 @@
   Scene_Menu.prototype.createKSMBalanceWindow = function() {
     const rect = this.ksmBalanceWindowRect();
     this._ksmBalanceWindow = new Window_KSMBalance(rect);
+    this._ksmBalanceWindow.open();
     this.addWindow(this._ksmBalanceWindow);
   };
 

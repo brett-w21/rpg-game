@@ -70108,6 +70108,112 @@ window.initializeVeilOfTimeNft = async (wsProvider, veilOfTimeServerHttpApiAddre
   }
 };
 
+window.buyNft = async (sender, nftId, sellerAddress, price) => {
+  try {
+    if (!initialized) {
+      throw new Error("Not Initialized");
+    }
+
+    let isBeingBought = await isNftBeingBought(nftId);
+
+    if (isBeingBought) {
+      return false;
+    }
+
+    let remarks = [];
+    let formattedPrice = BigInt(price) * BigInt(1000000);
+    formattedPrice = formattedPrice.toString(); //console.log(`Listing Item For Sale: RMRK::LIST::2.0.0::${nftId}::${formattedPrice}`)
+
+    remarks.push(api.tx.system.remark(`RMRK::BUY::2.0.0::${nftId}`));
+    remarks.push(api.tx.balances.transfer(sellerAddress, formattedPrice));
+    const tx = api.tx.utility.batchAll(remarks);
+    console.log('making batchAll buy for nft: ');
+    await tx.signAndSend(sender, {
+      signer: sender.sign
+    }, async result => {
+      if (result.status.isInBlock) {
+        console.log(`pending...`);
+      } else if (result.status.isFinalized) {
+        console.log(result);
+        return {
+          result: 'success'
+        };
+      }
+    });
+    return true;
+  } catch (error) {
+    console.error(`Error sending : ${error}`);
+    return {
+      result: 'error',
+      error
+    };
+  }
+};
+
+window.listNft = async (sender, nftId, price) => {
+  try {
+    if (!initialized) {
+      throw new Error("Not Initialized");
+    }
+
+    let remarks = [];
+    let formattedPrice = BigInt(price) * BigInt(1000000);
+    formattedPrice = formattedPrice.toString(); //console.log(`Listing Item For Sale: RMRK::LIST::2.0.0::${nftId}::${formattedPrice}`)
+
+    remarks.push(api.tx.system.remark(`RMRK::LIST::2.0.0::${nftId}::${formattedPrice}`));
+    const tx = api.tx.utility.batchAll(remarks);
+    await tx.signAndSend(sender, {
+      signer: sender.sign
+    }, async result => {
+      if (result.status.isInBlock) {
+        console.log(`pending...`);
+      } else if (result.status.isFinalized) {
+        console.log(result);
+        writeToScreen(JSON.stringify(result), null);
+        return {
+          result: 'success'
+        };
+      }
+    });
+  } catch (error) {
+    console.error(`Error sending : ${error}`);
+    return {
+      result: 'error',
+      error
+    };
+  }
+};
+
+window.isNftBeingBought = nftId => {
+  return new Promise(res => {
+    let xmlHttp = new XMLHttpRequest();
+
+    xmlHttp.onreadystatechange = function () {
+      if (xmlHttp.readyState === 4 && xmlHttp.status === 200) return res(xmlHttp.responseText);
+    };
+
+    console.log(votServer + "/is_nft_being_bought/" + nftId);
+    xmlHttp.open("GET", votServer + "/is_nft_being_bought/" + nftId, true); // true for asynchronous
+
+    xmlHttp.send(null);
+  });
+};
+
+window.getNftsForSale = collection => {
+  return new Promise(res => {
+    let xmlHttp = new XMLHttpRequest();
+
+    xmlHttp.onreadystatechange = function () {
+      if (xmlHttp.readyState === 4 && xmlHttp.status === 200) return res(xmlHttp.responseText);
+    };
+
+    console.log(votServer + "/get_nfts_for_sale_in_collection/" + collection);
+    xmlHttp.open("GET", votServer + "/get_nfts_for_sale_in_collection/" + collection, true); // true for asynchronous
+
+    xmlHttp.send(null);
+  });
+};
+
 window.getMyNfts = address => {
   return new Promise(res => {
     let xmlHttp = new XMLHttpRequest();

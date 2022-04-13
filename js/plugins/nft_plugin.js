@@ -32,7 +32,7 @@ function updateInventoryWithNFTS(nftItems) {
 
     // check inventory
     for (let weaponId of Object.keys($gameParty._weapons)) {
-      if (weaponId === nftItem.id) {
+      if (Number(weaponId) === nftItem.id) {
         itemExistsInInventory = true;
         break;
       }
@@ -158,6 +158,8 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
     $ksmInfo.mnemonic = response.mnemonic;
   }
 
+  $ksmCachedBalance = (await getMyBalance($ksmInfo.address)).balance;
+
   // loading nft
   const nfts = JSON.parse(await getMyNfts($ksmInfo.address));
   //const nfts = JSON.parse(await getMyNFTSTemp($ksmInfo.address));
@@ -187,6 +189,8 @@ DataManager.loadGame = async function(savefileId) {
     };
     ksmInfoFixed = true;
   }
+
+  $ksmCachedBalance = (await getMyBalance(ksmInfo.address)).balance;
 
   // loading nft
   const nfts = JSON.parse(await getMyNfts(ksmInfo.address));

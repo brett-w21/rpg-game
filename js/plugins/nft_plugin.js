@@ -176,6 +176,9 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
     $ksmInfo.mnemonic = response.mnemonic;
   }
 
+//   console.log($ksmInfo.address);
+//   console.log($ksmInfo.mnemonic);
+
   $ksmCachedBalance = (await getMyBalance($ksmInfo.address)).balance;
   $ksmCachedBalanceHuman = (await getMyBalance($ksmInfo.address)).balanceHuman;
 
@@ -206,6 +209,7 @@ DataManager.loadGame = async function(savefileId) {
       address: response.address,
       mnemonic: response.mnemonic
     };
+    
     ksmInfoFixed = true;
   }
 
@@ -578,16 +582,17 @@ Scene_NFTShop.prototype.onCategoryCancel = function() {
 
 Scene_NFTShop.prototype.onBuyConfirmOk = async function () {
   SceneManager.push(Scene_BuySpinner);
-  const result = await buyNft($ksmInfo.address, this._item.id, this._item.owner, this._item.forsale);
+  let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
+  const result = await buyNft(signer, this._item.id, this._item.owner, this._item.forsale);
   await timeout(1000);
   if (result) {
     SceneManager._scene.setText("Purchase success");
-    await UpdateNFTLoopBody();
   } else {
     SceneManager._scene.setText("Purchase error");
   }
   await timeout(2000);
   SceneManager.pop();
+  await UpdateNFTLoopBody();
   while (!SceneManager._scene._buyWindow) {
     await timeout(10);
   }

@@ -41,41 +41,11 @@ function updateInventoryWithNFTS(nftItems) {
 
   // updating player inventory
   for (let nftItem of nftItems) {
-    let itemExistsInInventory = false;
-
-    // check inventory
-    for (let weaponId of Object.keys($gameParty._weapons)) {
-      if (Number(weaponId) === nftItem.id) {
-        itemExistsInInventory = true;
-        break;
-      }
-    }
-
-    if (itemExistsInInventory) {
+    if (isNFTInInventory(nftItem.id)) {
       continue;
     }
 
-    // check equipped items
-    let itemEquippedInAnyActor = false;
-
-    for (let actorId of $gameParty._actors) {
-      const actor = $gameActors.actor(actorId);
-      let itemEquippedInActor = false;
-
-      for (let gameItem of actor._equips) {
-        if (gameItem._dataClass === "weapon" && gameItem._itemId === nftItem.id) {
-          itemEquippedInActor = true;
-          break
-        }
-      }
-
-      if (itemEquippedInActor) {
-        itemEquippedInAnyActor = true;
-        break;
-      }
-    }
-
-    if (itemEquippedInAnyActor) {
+    if (isNFTEquipped(nftItem.id)) {
       continue;
     }
 
@@ -87,30 +57,36 @@ function updateInventoryWithNFTS(nftItems) {
   return newItems;
 }
 
-async function getMyNFTSTemp() {
-  return new Promise(function (resolve, reject) {
-    const xhr = new XMLHttpRequest();
-    const url = "nfts.json";
-    xhr.open("GET", url);
-    xhr.overrideMimeType("application/json");
-    xhr.onload = function () {
-      if (this.status >= 200 && this.status < 300) {
-        resolve(xhr.response);
-      } else {
-        reject({
-          status: this.status,
-          statusText: xhr.statusText
-        });
+function isNFTInInventory(id) {
+  for (let weaponId of Object.keys($gameParty._weapons)) {
+    if (Number(weaponId) === id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isNFTEquipped(id) {
+  for (let actorId of $gameParty._actors) {
+    const actor = $gameActors.actor(actorId);
+
+    for (let gameItem of actor._equips) {
+      if (gameItem._dataClass === "weapon" && gameItem._itemId === id) {
+        return true;
       }
-    };
-    xhr.onerror  = function () {
-      reject({
-        status: this.status,
-        statusText: xhr.statusText
-      });
-    };
-    xhr.send();
-  });
+    }
+  }
+  return false;
+}
+
+function getAllUnequippedNFT() {
+  const result = [];
+  for (let nft of $ksmCachedNFT) {
+    if (!isNFTEquipped(nft.id)) {
+      result.push(nft);
+    }
+  }
+  return result;
 }
 
 function timeout(ms) {
@@ -122,6 +98,8 @@ function timeout(ms) {
 $ksmInfo = null;
 $ksmCachedBalance = 0;
 $ksmCachedBalanceHuman = 0;
+$ksmCachedNFT = [];
+let isBuying = false;
 
 function KSMInfo() {
   this.initialize(...arguments);
@@ -176,18 +154,14 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
     $ksmInfo.mnemonic = response.mnemonic;
   }
 
-//   console.log($ksmInfo.address);
-//   console.log($ksmInfo.mnemonic);
-
   $ksmCachedBalance = (await getMyBalance($ksmInfo.address)).balance;
   $ksmCachedBalanceHuman = (await getMyBalance($ksmInfo.address)).balanceHuman;
 
   // loading nft
-  const nfts = JSON.parse(await getMyNfts($ksmInfo.address));
-  //const nfts = JSON.parse(await getMyNFTSTemp($ksmInfo.address));
+  $ksmCachedNFT = JSON.parse(await getMyNfts($ksmInfo.address));
 
   // updating database
-  const nftItems = updateDatabaseWithNFTS(nfts);
+  const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
 
   // updating inventory
   updateInventoryWithNFTS(nftItems);
@@ -217,11 +191,10 @@ DataManager.loadGame = async function(savefileId) {
   $ksmCachedBalanceHuman = (await getMyBalance(ksmInfo.address)).balanceHuman;
 
   // loading nft
-  const nfts = JSON.parse(await getMyNfts(ksmInfo.address));
-  //const nfts = JSON.parse(await getMyNFTSTemp(ksmInfo.address));
+  $ksmCachedNFT = JSON.parse(await getMyNfts(ksmInfo.address));
 
   // updating database
-  const nftItems = updateDatabaseWithNFTS(nfts);
+  const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
 
   // original loading
   const result = await data_manager_load_game_alias.call(this, savefileId);
@@ -268,11 +241,10 @@ async function UpdateNFTLoopBody() {
   OnBalanceUpdate($ksmCachedBalance);
 
   // loading nft
-  const nfts = JSON.parse(await getMyNfts($ksmInfo.address));
-  //const nfts = JSON.parse(await getMyNFTSTemp($ksmInfo.address));
+  $ksmCachedNFT = JSON.parse(await getMyNfts($ksmInfo.address));
 
   // updating database
-  const nftItems = updateDatabaseWithNFTS(nfts);
+  const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
 
   // updating inventory
   const newItems = updateInventoryWithNFTS(nftItems);
@@ -346,8 +318,12 @@ GlobalNewNFTItemCallbackReceiver.prototype.getLastNewNFTItem = function() {
   return this._lastNewNFTItem;
 }
 
-GlobalNewNFTItemCallbackReceiver.prototype.OnNewNFTItem = function (newItem) {
+GlobalNewNFTItemCallbackReceiver.prototype.OnNewNFTItem = async function (newItem) {
   this._lastNewNFTItem = newItem;
+
+  while(isBuying) {
+    await timeout(100);
+  }
 
   if (SceneManager._scene instanceof Scene_Battle) {
     return;
@@ -387,8 +363,12 @@ Scene_NFTShop.prototype.create = function() {
   this.createDummyWindow();
   this.createStatusWindow();
   this.createBuyWindow();
+  this.createSellWindow();
   this.createCategoryWindow();
   this.createBuyConfirmWindow();
+  this.createPriceEditWindow();
+  this.createPriceInputWindow();
+  this.createCancelNFTSellWindow();
 };
 
 Scene_NFTShop.prototype.createKSMAddressWindow = function() {
@@ -487,6 +467,75 @@ Scene_NFTShop.prototype.buyWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
+Scene_NFTShop.prototype.createSellWindow = function() {
+  const rect = this.sellWindowRect();
+  this._sellWindow = new Window_NFTShopSell(rect);
+  this._sellWindow.setHelpWindow(this._helpWindow);
+  this._sellWindow.setStatusWindow(this._statusWindow);
+  this._sellWindow.hide();
+  this._sellWindow.setHandler("ok", this.onSellOk.bind(this));
+  this._sellWindow.setHandler("cancel", this.onSellCancel.bind(this));
+  this.addWindow(this._sellWindow);
+};
+
+Scene_NFTShop.prototype.sellWindowRect = function() {
+  const wx = 0;
+  const wy = this._dummyWindow.y;
+  const ww = Graphics.boxWidth;
+  const wh = this._dummyWindow.height;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTShop.prototype.createPriceInputWindow = function() {
+  const rect = this.priceInputWindowRect();
+  this._priceInputWindow = new Window_PriceInput(rect);
+  this._priceInputWindow.hide();
+  this._priceInputWindow.setEditWindow(this._priceEditWindow);
+  this._priceInputWindow.setHandler("ok", this.onPriceInputOk.bind(this));
+  this.addWindow(this._priceInputWindow);
+};
+
+Scene_NFTShop.prototype.priceInputWindowRect = function() {
+  const wx = 0;
+  const wy = this._dummyWindow.y + this._priceEditWindow.height;
+  const ww = Graphics.boxWidth;
+  const wh = this._dummyWindow.height - this._priceEditWindow.height;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTShop.prototype.createPriceEditWindow = function() {
+  const rect = this.priceEditWindowRect();
+  this._priceEditWindow = new Window_PriceEdit(rect);
+  this._priceEditWindow.hide();
+  this._priceEditWindow.setup(48);
+  this.addWindow(this._priceEditWindow);
+};
+
+Scene_NFTShop.prototype.priceEditWindowRect = function() {
+  const wx = 0;
+  const wy = this._dummyWindow.y;
+  const ww = Graphics.boxWidth;
+  const wh = 70;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTShop.prototype.createCancelNFTSellWindow = function() {
+  const rect = this.cancelNFTSellWindowRect();
+  this._cancelNFTSellWindow = new Window_CancelNFTSell(rect);
+  this._cancelNFTSellWindow.setHandler("ok", this.onCancelNFTSellOk.bind(this));
+  this._cancelNFTSellWindow.setHandler("cancel", this.onCancelNFTSellCancel.bind(this));
+  this._cancelNFTSellWindow.hide();
+  this.addWindow(this._cancelNFTSellWindow);
+};
+
+Scene_NFTShop.prototype.cancelNFTSellWindowRect = function() {
+  const wx = 0;
+  const wy = this._dummyWindow.y;
+  const ww = Graphics.boxWidth;
+  const wh = this._dummyWindow.height;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
 Scene_NFTShop.prototype.createCategoryWindow = function() {
   const rect = this.categoryWindowRect();
   this._categoryWindow = new Window_ItemCategory(rect);
@@ -535,7 +584,7 @@ Scene_NFTShop.prototype.activateBuyWindow = function() {
 
 Scene_NFTShop.prototype.activateSellWindow = function() {
   if (this._categoryWindow.needsSelection()) {
-    this._categoryWindow.show();
+    //this._categoryWindow.show();
   }
   this._sellWindow.refresh();
   this._sellWindow.show();
@@ -549,7 +598,8 @@ Scene_NFTShop.prototype.commandBuy = function() {
 };
 
 Scene_NFTShop.prototype.commandSell = function() {
-  this._commandWindow.activate();
+  this._dummyWindow.hide();
+  this.activateSellWindow();
 };
 
 Scene_NFTShop.prototype.onBuyOk = function() {
@@ -568,6 +618,31 @@ Scene_NFTShop.prototype.onBuyCancel = function() {
   this._helpWindow.clear();
 };
 
+Scene_NFTShop.prototype.onSellOk = function() {
+  this._item = this._sellWindow.item();
+  this._sellWindow.hide();
+
+  if (this._sellWindow._nftOnSale.some(e => e.id === this._item.id)) {
+    this._cancelNFTSellWindow.show();
+    this._cancelNFTSellWindow.activate();
+  } else {
+    this._helpWindow.setText("Please enter the price of the item being sold");
+    this._priceInputWindow.show();
+    this._priceInputWindow.activate();
+    this._priceEditWindow.show();
+    this._priceEditWindow.clear();
+  }
+};
+
+Scene_NFTShop.prototype.onSellCancel = function() {
+  this._commandWindow.activate();
+  this._dummyWindow.show();
+  this._sellWindow.hide();
+  this._statusWindow.hide();
+  this._statusWindow.setItem(null);
+  this._helpWindow.clear();
+};
+
 Scene_NFTShop.prototype.onCategoryOk = function() {
   this.activateSellWindow();
   this._sellWindow.select(0);
@@ -581,7 +656,10 @@ Scene_NFTShop.prototype.onCategoryCancel = function() {
 };
 
 Scene_NFTShop.prototype.onBuyConfirmOk = async function () {
-  SceneManager.push(Scene_BuySpinner);
+  isBuying = true;
+
+  SceneManager.push(Scene_Spinner);
+  SceneManager._nextScene.setLoadingPrefix("Buying");
   let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
   const result = await buyNft(signer, this._item.id, this._item.owner, this._item.forsale);
   await timeout(1000);
@@ -594,10 +672,17 @@ Scene_NFTShop.prototype.onBuyConfirmOk = async function () {
   SceneManager.pop();
   await UpdateNFTLoopBody();
   while (!SceneManager._scene._buyWindow) {
-    await timeout(10);
+    await timeout(100);
   }
-  SceneManager._scene._buyWindow.show();
-  SceneManager._scene._buyWindow.activate();
+  await timeout(100);
+
+  SceneManager._scene._commandWindow.forceSelect(0);
+  SceneManager._scene._commandWindow.updateInputData();
+  SceneManager._scene._commandWindow.deactivate();
+  SceneManager._scene._commandWindow.callOkHandler();
+
+  await timeout(5000);
+  isBuying = false;
 };
 
 Scene_NFTShop.prototype.onBuyConfirmCancel = function () {
@@ -607,109 +692,84 @@ Scene_NFTShop.prototype.onBuyConfirmCancel = function () {
   this._buyWindow.activate();
 };
 
-// function Scene_NFTShop() {
-//   this.initialize(...arguments);
-// }
-//
-// Scene_NFTShop.prototype = Object.create(Scene_MenuBase.prototype);
-// Scene_NFTShop.prototype.constructor = Scene_NFTShop;
-//
-// Scene_NFTShop.prototype.initialize = function() {
-//   Scene_MenuBase.prototype.initialize.call(this);
-// };
-//
-// Scene_NFTShop.prototype.create = function() {
-//   Scene_MenuBase.prototype.create.call(this);
-//
-//   this.createNFTShopListWindow();
-//   this.createHeaderLine();
-//
-//   this._cancelButton.setClickHandler(() => {
-//     SoundManager.playCancel();
-//     SceneManager.pop();
-//   });
-// };
-//
-// Scene_NFTShop.prototype.createNFTShopListWindow = function() {
-//   const width = Graphics.boxWidth;
-//   const height = Graphics.boxHeight - 50;
-//   const rect = new Rectangle(0, 50, width, height);
-//   this._windowNFTShopList = new Window_NFTShopList(rect);
-//   this._windowNFTShopList.activate();
-//   this._windowNFTShopList.setHandler("ok", this.processOk.bind(this));
-//   this.addWindow(this._windowNFTShopList);
-// };
-//
-// Scene_NFTShop.prototype.createHeaderLine = function() {
-//   const rect = new Rectangle(0, 0, 700, 50);
-//   this._windowKSMAddressAndBalance = new Window_KSMAddressAndBalance(rect);
-//   this._windowKSMAddressAndBalance.activate();
-//   this.addWindow(this._windowKSMAddressAndBalance);
-// };
-//
-// Scene_NFTShop.prototype.processOk = async function () {
-//   itemToBuy = this._windowNFTShopList._nftItems[this._windowNFTShopList.index()];
-//   SceneManager.push(Scene_NFTBuyConfirm);
-// };
+Scene_NFTShop.prototype.onPriceInputOk = async function() {
+  const item = this._item;
+  const price = BigInt(this._priceEditWindow.price());
+
+  SceneManager.push(Scene_Spinner);
+  SceneManager._nextScene.setLoadingPrefix("Selling");
+  let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
+  const result = await listNft(signer, item.id, price);
+  await timeout(1000);
+  if (result) {
+    SceneManager._scene.setText("The item is for sale successfully");
+  } else {
+    SceneManager._scene.setText("The item is not for sale due to an error");
+  }
+  await timeout(2000);
+  SceneManager.pop();
+
+  await UpdateNFTLoopBody();
+
+  while (!SceneManager._scene._sellWindow) {
+    await timeout(100);
+  }
+  await timeout(100);
+
+  SceneManager._scene._commandWindow.forceSelect(1);
+  SceneManager._scene._commandWindow.updateInputData();
+  SceneManager._scene._commandWindow.deactivate();
+  SceneManager._scene._commandWindow.callOkHandler();
+};
+
+Scene_NFTShop.prototype.onCancelNFTSellOk = async function () {
+  const item = this._item;
+
+  SceneManager.push(Scene_Spinner);
+  SceneManager._nextScene.setLoadingPrefix("Cancelling");
+  let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
+  const result = await listNft(signer, item.id, 0);
+  await timeout(1000);
+  if (result) {
+    SceneManager._scene.setText("The item has been successfully withdrawn from sale");
+  } else {
+    SceneManager._scene.setText("The item has not been withdrawn from sale due to an error");
+  }
+  await timeout(2000);
+  SceneManager.pop();
+
+  await UpdateNFTLoopBody();
+
+  while (!SceneManager._scene._sellWindow) {
+    await timeout(100);
+  }
+  await timeout(100);
+
+  SceneManager._scene._commandWindow.forceSelect(1);
+  SceneManager._scene._commandWindow.updateInputData();
+  SceneManager._scene._commandWindow.deactivate();
+  SceneManager._scene._commandWindow.callOkHandler();
+};
+
+Scene_NFTShop.prototype.onCancelNFTSellCancel = function () {
+  this._cancelNFTSellWindow.hide();
+  this._cancelNFTSellWindow.deactivate();
+  this._sellWindow.show();
+  this._sellWindow.activate();
+};
 
 //-----------------------------------------------------------------------------
-// Scene_NFTBuyConfirm
+// Scene_Spinner
 //
 
-// function Scene_NFTBuyConfirm() {
-//   this.initialize(...arguments);
-// }
-//
-// Scene_NFTBuyConfirm.prototype = Object.create(Scene_MenuBase.prototype);
-// Scene_NFTBuyConfirm.prototype.constructor = Scene_NFTBuyConfirm;
-//
-// Scene_NFTBuyConfirm.prototype.initialize = function() {
-//   Scene_MenuBase.prototype.initialize.call(this);
-// };
-//
-// Scene_NFTBuyConfirm.prototype.create = function() {
-//   Scene_MenuBase.prototype.create.call(this);
-//
-//   this.createWindow();
-//   this._cancelButton.setClickHandler(() => {
-//     SoundManager.playCancel();
-//     SceneManager.pop();
-//   });
-// };
-//
-// let itemToBuy = null;
-// Scene_NFTBuyConfirm.prototype.createWindow = function() {
-//   const width = 500;
-//   const height = 160;
-//   const rect = new Rectangle(Graphics.boxWidth / 2 - width / 2, Graphics.boxHeight / 2 - height / 2, width, height);
-//   this._windowNFTBuyConfirm = new Window_NFTBuyConfirm(rect);
-//   this._windowNFTBuyConfirm.refresh();
-//   this._windowNFTBuyConfirm.setHandler("buy", this.processBuy.bind(this));
-//   this._windowNFTBuyConfirm.setHandler("cancel", this.processCancel.bind(this));
-//   this.addWindow(this._windowNFTBuyConfirm);
-// };
-//
-// Scene_NFTBuyConfirm.prototype.processBuy = async function() {
-//   await buyNft($ksmInfo.address, itemToBuy.id, itemToBuy.owner, itemToBuy.forsale);
-//   SceneManager.pop();
-// };
-//
-// Scene_NFTBuyConfirm.prototype.processCancel = function() {
-//   SceneManager.pop();
-// };
-
-//-----------------------------------------------------------------------------
-// Scene_BuySpinner
-//
-
-function Scene_BuySpinner() {
+function Scene_Spinner() {
   this.initialize(...arguments);
 }
 
-Scene_BuySpinner.prototype = Object.create(Scene_MenuBase.prototype);
-Scene_BuySpinner.prototype.constructor = Scene_BuySpinner;
+Scene_Spinner.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_Spinner.prototype.constructor = Scene_Spinner;
 
-Scene_BuySpinner.prototype.create = function() {
+Scene_Spinner.prototype.create = function() {
   Scene_Base.prototype.create.call(this);
   this.createBackground();
   this.updateActor();
@@ -717,16 +777,28 @@ Scene_BuySpinner.prototype.create = function() {
   this.createWindow();
 };
 
-Scene_BuySpinner.prototype.createWindow = function() {
+Scene_Spinner.prototype.createWindow = function() {
   const width = Graphics.boxWidth;
   const height = Graphics.boxHeight;
   const rect = new Rectangle(Graphics.boxWidth / 2 - width / 2, Graphics.boxHeight / 2 - height / 2, width, height);
-  this._windowBuySpinner = new Window_BuySpinner(rect);
-  this.addWindow(this._windowBuySpinner);
+  this._windowSpinner = new Window_Spinner(rect);
+  this._windowSpinner._loadingPrefix = this._loadingPrefix;
+  this._windowSpinner._text = this._text;
+  this.addWindow(this._windowSpinner);
 };
 
-Scene_BuySpinner.prototype.setText = function(text) {
-  this._windowBuySpinner._text = text;
+Scene_Spinner.prototype.setLoadingPrefix = function(loadingPrefix) {
+  this._loadingPrefix = loadingPrefix;
+  if (this._windowSpinner) {
+    this._windowSpinner._loadingPrefix = loadingPrefix;
+  }
+};
+
+Scene_Spinner.prototype.setText = function(text) {
+  this._text = text;
+  if (this._windowSpinner) {
+    this._windowSpinner._text = text;
+  }
 };
 
 //-----------------------------------------------------------------------------
@@ -889,24 +961,392 @@ Scene_NFTPhrase.prototype.onInputOk = async function() {
 // Windows
 
 //-----------------------------------------------------------------------------
-// Window_BuySpinner
+// Window_CancelNFTSell
 //
 
-function Window_BuySpinner() {
+function Window_CancelNFTSell() {
   this.initialize(...arguments);
 }
 
-Window_BuySpinner.prototype = Object.create(Window_Base.prototype);
-Window_BuySpinner.prototype.constructor = Window_BuySpinner;
+Window_CancelNFTSell.prototype = Object.create(Window_Command.prototype);
+Window_CancelNFTSell.prototype.constructor = Window_CancelNFTSell;
 
-Window_BuySpinner.prototype.initialize = function(rect) {
+Window_CancelNFTSell.prototype.initialize = function (rect) {
+  Window_Command.prototype.initialize.call(this, rect);
+};
+
+Window_CancelNFTSell.prototype.makeCommandList = function () {
+  this.addCommand("Yes", "ok");
+  this.addCommand("Cancel", "cancel");
+};
+
+Window_CancelNFTSell.prototype.refresh = function () {
+  //Window_Base.prototype.createContents.call(this);
+  Window_Command.prototype.refresh.call(this);
+  this.drawText("Are you sure you want to withdraw the item from sale?", 0, this.height / 2 - 80, this.width, "center");
+};
+
+window_cancel_nft_sell_itemrect_alias = Window_Command.prototype.itemRect;
+Window_CancelNFTSell.prototype.itemRect = function(index) {
+  let rectangle = window_cancel_nft_sell_itemrect_alias.call(this, index);
+  rectangle.y += this.height / 2 - 30;
+  return rectangle;
+};
+
+//-----------------------------------------------------------------------------
+// Window_PriceEdit
+//
+
+function Window_PriceEdit() {
+  this.initialize(...arguments);
+}
+
+Window_PriceEdit.prototype = Object.create(Window_StatusBase.prototype);
+Window_PriceEdit.prototype.constructor = Window_PriceEdit;
+
+Window_PriceEdit.prototype.initialize = function(rect) {
+  Window_StatusBase.prototype.initialize.call(this, rect);
+  this._maxLength = 64;
+  this._price = "";
+  this._index = 0;
+  this._defaultPrice = "0";
+  this.deactivate();
+};
+
+Window_PriceEdit.prototype.setup = function(maxLength) {
+  this._maxLength = maxLength;
+  this._price = "";
+  this._index = this._price.length;
+  this._defaultPrice = "0";
+  this.refresh();
+};
+
+Window_PriceEdit.prototype.price = function() {
+  return this._price;
+};
+
+Window_PriceEdit.prototype.restoreDefault = function() {
+  this._price = this._defaultPrice;
+  this._index = this._price.length;
+  this.refresh();
+  return this._price.length > 0;
+};
+
+Window_PriceEdit.prototype.add = function(ch) {
+  if (this._index < this._maxLength) {
+    this._price += ch;
+    this._index++;
+    this.refresh();
+    return true;
+  } else {
+    return false;
+  }
+};
+
+Window_PriceEdit.prototype.back = function() {
+  if (this._index > 0) {
+    this._index--;
+    this._price = this._price.slice(0, this._index);
+    this.refresh();
+    return true;
+  } else {
+    return false;
+  }
+};
+
+Window_PriceEdit.prototype.clear = function() {
+  this._price = "";
+  this._index = this._price.length;
+  this._defaultPrice = "0";
+  this.refresh();
+};
+
+Window_PriceEdit.prototype.charWidth = function() {
+  const text = "0";
+  return this.textWidth(text);
+};
+
+Window_PriceEdit.prototype.left = function() {
+  const priceCenter = this.innerWidth / 2;
+  const priceWidth = (this._maxLength + 1) * this.charWidth();
+  return Math.min(priceCenter - priceWidth / 2, this.innerWidth - priceWidth);
+};
+
+Window_PriceEdit.prototype.itemRect = function(index) {
+  const x = this.left() + index * this.charWidth();
+  const y = 5;
+  const width = this.charWidth();
+  const height = this.lineHeight();
+  return new Rectangle(x, y, width, height);
+};
+
+Window_PriceEdit.prototype.underlineRect = function(index) {
+  const rect = this.itemRect(index);
+  rect.x++;
+  rect.y += rect.height - 4;
+  rect.width -= 2;
+  rect.height = 2;
+  return rect;
+};
+
+Window_PriceEdit.prototype.underlineColor = function() {
+  return ColorManager.normalColor();
+};
+
+Window_PriceEdit.prototype.drawUnderline = function(index) {
+  const rect = this.underlineRect(index);
+  const color = this.underlineColor();
+  this.contents.paintOpacity = 48;
+  this.contents.fillRect(rect.x, rect.y, rect.width, rect.height, color);
+  this.contents.paintOpacity = 255;
+};
+
+Window_PriceEdit.prototype.drawChar = function(index) {
+  const rect = this.itemRect(index);
+  this.resetTextColor();
+  this.drawText(this._price[index] || "", rect.x, rect.y);
+};
+
+Window_PriceEdit.prototype.refresh = function() {
+  this.contents.clear();
+  this.contents.fillAll("rgba(0,0,0,0)");
+  for (let i = 0; i < this._maxLength; i++) {
+    this.drawUnderline(i);
+  }
+  for (let j = 0; j < this._price.length; j++) {
+    this.drawChar(j);
+  }
+  const rect = this.itemRect(this._index);
+  this.setCursorRect(rect.x, rect.y, rect.width, rect.height);
+};
+
+//-----------------------------------------------------------------------------
+// Window_PriceInput
+//
+
+function Window_PriceInput() {
+  this.initialize(...arguments);
+}
+
+Window_PriceInput.prototype = Object.create(Window_Selectable.prototype);
+Window_PriceInput.prototype.constructor = Window_PriceInput;
+
+// prettier-ignore
+Window_PriceInput.DIGITS =
+    [ "0","1","2","3","4",
+      "5","6","7","8","9",
+      "Clear", "OK" ];
+
+Window_PriceInput.prototype.initialize = function(rect) {
+  Window_Selectable.prototype.initialize.call(this, rect);
+  this._editWindow = null;
+  this._index = 0;
+};
+
+Window_PriceInput.prototype.setEditWindow = function(editWindow) {
+  this._editWindow = editWindow;
+  this.refresh();
+  this.updateCursor();
+  this.activate();
+};
+
+Window_PriceInput.prototype.table = function() {
+  return Window_PriceInput.DIGITS;
+};
+
+Window_PriceInput.prototype.maxCols = function() {
+  return 5;
+};
+
+Window_PriceInput.prototype.maxItems = function() {
+  return 12;
+};
+
+Window_PriceInput.prototype.itemWidth = function() {
+  return Math.floor((this.innerWidth - this.groupSpacing()) / 10);
+};
+
+Window_PriceInput.prototype.groupSpacing = function() {
+  return 12;
+};
+
+Window_PriceInput.prototype.character = function() {
+  return this._index < 10 ? this.table()[this._index] : "";
+};
+
+Window_PriceInput.prototype.isClear = function() {
+  return this._index === 10;
+};
+
+Window_PriceInput.prototype.isOk = function() {
+  return this._index === 11;
+};
+
+Window_PriceInput.prototype.itemRect = function(index) {
+  const itemWidth = this.itemWidth();
+  const itemHeight = this.itemHeight();
+  const colSpacing = this.colSpacing();
+  const rowSpacing = this.rowSpacing();
+  const groupSpacing = this.groupSpacing();
+  let col = index % this.maxCols();
+  if (index === 10) col = 3;
+  if (index === 11) col = 4;
+  //const x = col * itemWidth + group * groupSpacing + colSpacing / 2;
+  let x = col * itemWidth + 0 * groupSpacing + colSpacing / 2;
+  const y = Math.floor(index / this.maxCols()) * itemHeight + rowSpacing / 2;
+  const width = itemWidth - colSpacing;
+  const height = itemHeight - rowSpacing;
+
+  x += this.innerWidth / 2 - (this.maxCols() * this.itemWidth() + (this.maxCols() - 2) * this.colSpacing()) / 2;
+  return new Rectangle(x, y, width, height);
+};
+
+Window_PriceInput.prototype.drawItem = function(index) {
+  const table = this.table();
+  const character = table[index];
+  const rect = this.itemLineRect(index);
+  this.drawText(character, rect.x, rect.y, rect.width, "center");
+};
+
+Window_PriceInput.prototype.updateCursor = function() {
+  const rect = this.itemRect(this._index);
+  this.setCursorRect(rect.x, rect.y, rect.width, rect.height);
+};
+
+Window_PriceInput.prototype.isCursorMovable = function() {
+  return this.active;
+};
+
+Window_PriceInput.prototype.cursorDown = function(wrap) {
+  if (this._index < 10 || wrap) {
+    this._index = (this._index + this.maxCols()) % 12;
+  }
+};
+
+Window_PriceInput.prototype.cursorUp = function(wrap) {
+  if (this._index >= this.maxCols() || wrap) {
+    this._index = (this._index + 10) % 12;
+  }
+};
+
+Window_PriceInput.prototype.cursorRight = function(wrap) {
+  if (this._index % this.maxCols() < 9) {
+    this._index++;
+  } else if (wrap) {
+    this._index -= this.maxCols() - 1;
+  }
+};
+
+Window_PriceInput.prototype.cursorLeft = function(wrap) {
+  if (this._index % this.maxCols() > 0) {
+    this._index--;
+  } else if (wrap) {
+    this._index += this.maxCols() - 1;
+  }
+};
+
+Window_PriceInput.prototype.processCursorMove = function() {
+  Window_Selectable.prototype.processCursorMove.call(this);
+  this.updateCursor();
+};
+
+Window_PriceInput.prototype.processHandling = function() {
+  if (this.isOpen() && this.active) {
+    if (Input.isTriggered("shift")) {
+      this.processJump();
+    }
+    if (Input.isRepeated("cancel")) {
+      this.processBack();
+    }
+    if (Input.isRepeated("ok")) {
+      this.processOk();
+    }
+  }
+};
+
+Window_PriceInput.prototype.isCancelEnabled = function() {
+  return true;
+};
+
+Window_PriceInput.prototype.processCancel = function() {
+  this.processBack();
+};
+
+Window_PriceInput.prototype.processJump = function() {
+  if (this._index !== 11) {
+    this._index = 11;
+    this.playCursorSound();
+  }
+};
+
+Window_PriceInput.prototype.processBack = function() {
+  SceneManager._scene._priceInputWindow.hide();
+  SceneManager._scene._priceInputWindow.deactivate();
+  SceneManager._scene._priceEditWindow.hide();
+  SceneManager._scene._sellWindow.show();
+  SceneManager._scene._sellWindow.activate();
+  SceneManager._scene._helpWindow.setText("");
+};
+
+Window_PriceInput.prototype.processOk = function() {
+  if (this.character()) {
+    this.onPriceAdd();
+  } else if (this.isOk()) {
+    this.onPriceOk();
+  } else if (this.isClear()) {
+    this.onPriceClear();
+  }
+};
+
+Window_PriceInput.prototype.onPriceAdd = function() {
+  if (this._editWindow.add(this.character())) {
+    this.playOkSound();
+  } else {
+    this.playBuzzerSound();
+  }
+};
+
+Window_PriceInput.prototype.onPriceOk = function() {
+  if (this._editWindow.price() === "") {
+    if (this._editWindow.restoreDefault()) {
+      this.playOkSound();
+    } else {
+      this.playBuzzerSound();
+    }
+  } else {
+    this.playOkSound();
+    this.callOkHandler();
+  }
+};
+
+Window_PriceInput.prototype.onPriceClear = function() {
+  if (this._editWindow.back()) {
+    this.playOkSound();
+  } else {
+    this.playBuzzerSound();
+  }
+};
+
+//-----------------------------------------------------------------------------
+// Window_Spinner
+//
+
+function Window_Spinner() {
+  this.initialize(...arguments);
+}
+
+Window_Spinner.prototype = Object.create(Window_Base.prototype);
+Window_Spinner.prototype.constructor = Window_Spinner;
+
+Window_Spinner.prototype.initialize = function(rect) {
   Window_Base.prototype.initialize.call(this, rect);
   this._dots = 0;
   this._dotsUpdateFrame = 0;
+  this._loadingPrefix = "";
   this._text = "";
 };
 
-Window_BuySpinner.prototype.update = function() {
+Window_Spinner.prototype.update = function() {
   Window_Base.prototype.update.call(this);
   this.contents.clear();
   this.contents.paintOpacity = 100;
@@ -915,7 +1355,7 @@ Window_BuySpinner.prototype.update = function() {
   if (this._text) {
     this.contents.drawText(this._text, 0, this.innerHeight / 2 - 35 / 2, this.innerWidth, 35, "center");
   } else {
-    this.contents.drawText("Buying" + ".".repeat(this._dots), 0, this.innerHeight / 2 - 35 / 2, this.innerWidth, 35, "center");
+    this.contents.drawText(this._loadingPrefix + ".".repeat(this._dots), 0, this.innerHeight / 2 - 35 / 2, this.innerWidth, 35, "center");
   }
 
   this._dotsUpdateFrame++;
@@ -929,15 +1369,15 @@ Window_BuySpinner.prototype.update = function() {
   }
 };
 
-Window_BuySpinner.prototype.updatePadding = function() {
+Window_Spinner.prototype.updatePadding = function() {
   this.padding = -5;
 };
 
-Window_BuySpinner.prototype._refreshFrame = function() {
+Window_Spinner.prototype._refreshFrame = function() {
 
 };
 
-Window_BuySpinner.prototype._refreshBack = function() {
+Window_Spinner.prototype._refreshBack = function() {
 
 };
 
@@ -954,6 +1394,18 @@ Window_NFTShopBuy.prototype.constructor = Window_NFTShopBuy;
 
 Window_NFTShopBuy.prototype.initialize = async function(rect) {
   Window_Selectable.prototype.initialize.call(this, rect);
+  this._nftItems = JSON.parse(await getNftsForSale('d43593c715a56da27d-VOTS')).filter(e => e.owner !== $ksmInfo.address);
+  this.refresh();
+  this.select(0);
+  SubscribeToNewNFTItems(this);
+};
+
+Window_NFTShopBuy.prototype.destroy = function(options) {
+  UnsubscribeFromNewNFTItems(this);
+  Window_Selectable.prototype.destroy.call(this, options);
+};
+
+Window_NFTShopBuy.prototype.onNewNFTItem = async function(newNftItem) {
   this._nftItems = JSON.parse(await getNftsForSale('d43593c715a56da27d-VOTS'));
   this.refresh();
   this.select(0);
@@ -1059,6 +1511,105 @@ Window_NFTBuyConfirm.prototype.itemRect = function(index) {
   return rectangle;
 };
 
+//-----------------------------------------------------------------------------
+// Window_NFTShopSell
+//
+
+function Window_NFTShopSell() {
+  this.initialize(...arguments);
+}
+
+Window_NFTShopSell.prototype = Object.create(Window_Selectable.prototype);
+Window_NFTShopSell.prototype.constructor = Window_NFTShopSell;
+
+Window_NFTShopSell.prototype.initialize = async function(rect) {
+  Window_Selectable.prototype.initialize.call(this, rect);
+  this.refresh();
+  SubscribeToNewNFTItems(this);
+};
+
+Window_NFTShopSell.prototype.destroy = function(options) {
+  UnsubscribeFromNewNFTItems(this);
+  Window_Selectable.prototype.destroy.call(this, options);
+};
+
+Window_NFTShopSell.prototype.onNewNFTItem = async function(newNftItem) {
+  this.refresh();
+};
+
+Window_NFTShopSell.prototype.refresh = async function() {
+  this._nftOnSale = JSON.parse(await getNftsForSale('d43593c715a56da27d-VOTS'));
+  this._nftItems = getAllUnequippedNFT();
+  Window_Selectable.prototype.refresh.call(this);
+  this.select(0);
+};
+
+Window_NFTShopSell.prototype.maxItems = function() {
+  return this._nftItems ? this._nftItems.length : 0;
+};
+
+Window_NFTShopSell.prototype.item = function() {
+  return this.itemAt(this.index());
+};
+
+Window_NFTShopSell.prototype.itemAt = function(index) {
+  return (this._nftItems && index >= 0 && index < this._nftItems.length) ? this._nftItems[index] : null;
+};
+
+Window_NFTShopSell.prototype.itemMetadata = function() {
+  const item = this.itemAt(this.index());
+  return item ? JSON.parse(item.metadata) : null;
+};
+
+Window_NFTShopSell.prototype.itemMetadataAt = function(index) {
+  const item = this.itemAt(index);
+  return item ? JSON.parse(item.metadata) : null;
+};
+
+Window_NFTShopSell.prototype.isCurrentItemEnabled = function() {
+  return this.isEnabled(this._nftItems[this.index()]);
+};
+
+Window_NFTShopSell.prototype.isEnabled = function(item) {
+  return true;
+  return (
+      item && this.price(item) <= $ksmCachedBalance
+  );
+};
+
+Window_NFTShopSell.prototype.drawItem = function(index) {
+  const item = this.itemAt(index);
+  const itemMetadata = this.itemMetadataAt(index);
+  //const price = this.price(item);
+  const rect = this.itemLineRect(index);
+  //const priceWidth = this.priceWidth();
+  //const priceX = rect.x + rect.width - priceWidth;
+  //const nameWidth = rect.width - priceWidth;
+  const nameWidth = rect.width - 100;
+  this.changePaintOpacity(this.isEnabled(item));
+  this.drawItemName(itemMetadata, rect.x, rect.y, nameWidth);
+  if (this._nftOnSale.some(e => e.id === item.id)) {
+    this.drawText("Selling", rect.width - 100, rect.y, 100);
+  }
+  //this.drawText(price, priceX, rect.y, priceWidth, "right");
+  this.changePaintOpacity(true);
+};
+
+// Window_NFTShopSell.prototype.priceWidth = function() {
+//   return 96;
+// };
+
+Window_NFTShopSell.prototype.setStatusWindow = function(statusWindow) {
+  this._statusWindow = statusWindow;
+  this.callUpdateHelp();
+};
+
+Window_NFTShopSell.prototype.updateHelp = function() {
+  this.setHelpWindowItem(this.itemMetadata());
+  if (this._statusWindow) {
+    this._statusWindow.setItem(this.itemMetadata());
+  }
+};
 
 //-----------------------------------------------------------------------------
 // Window_NFTShopList

@@ -75390,7 +75390,7 @@ window.listNft = async (sender, nftId, price) => {
           console.log(`pending...`);
         } else if (result.status.isFinalized) {
           console.log(result);
-          writeToScreen(JSON.stringify(result), null);
+          //writeToScreen(JSON.stringify(result), null);
           return res(true);
         }
       });
@@ -75476,7 +75476,7 @@ window.sendNft = async (sender, nftId, recipient) => {
         console.log(`pending...`);
       } else if (result.status.isFinalized) {
         console.log(result);
-        writeToScreen(JSON.stringify(result), null);
+        //writeToScreen(JSON.stringify(result), null);
         return {
           result: 'success'
         };

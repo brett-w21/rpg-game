@@ -30,6 +30,7 @@ function updateDatabaseWithNFTS(nfts) {
     const metadata = JSON.parse(nft.metadata);
     const gameItemValue = metadata.properties.gameData.value;
     gameItemValue.id += 51;
+    gameItemValue.nftId = nft.id;
     $dataWeapons[gameItemValue.id] = gameItemValue;
     newItems.push(gameItemValue);
   }
@@ -41,11 +42,11 @@ function updateInventoryWithNFTS(nftItems) {
 
   // updating player inventory
   for (let nftItem of nftItems) {
-    if (isNFTInInventory(nftItem.id)) {
+    if (isNFTInInventory(nftItem.nftId)) {
       continue;
     }
 
-    if (isNFTEquipped(nftItem.id)) {
+    if (isNFTEquipped(nftItem.nftId)) {
       continue;
     }
 
@@ -57,21 +58,23 @@ function updateInventoryWithNFTS(nftItems) {
   return newItems;
 }
 
-function isNFTInInventory(id) {
+function isNFTInInventory(nftId) {
+  const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
   for (let weaponId of Object.keys($gameParty._weapons)) {
-    if (Number(weaponId) === id) {
+    if (Number(weaponId) === inGameWeaponId) {
       return true;
     }
   }
   return false;
 }
 
-function isNFTEquipped(id) {
+function isNFTEquipped(nftId) {
+  const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
   for (let actorId of $gameParty._actors) {
     const actor = $gameActors.actor(actorId);
 
     for (let gameItem of actor._equips) {
-      if (gameItem._dataClass === "weapon" && gameItem._itemId === id) {
+      if (gameItem._dataClass === "weapon" && gameItem._itemId === inGameWeaponId) {
         return true;
       }
     }
@@ -99,6 +102,7 @@ $ksmInfo = null;
 $ksmCachedBalance = 0;
 $ksmCachedBalanceHuman = 0;
 $ksmCachedNFT = [];
+$ksmCachedNFTOnSale = [];
 let isBuying = false;
 
 function KSMInfo() {
@@ -159,6 +163,7 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
 
   // loading nft
   $ksmCachedNFT = JSON.parse(await getMyNfts($ksmInfo.address));
+  $ksmCachedNFTOnSale = JSON.parse(await getNftsForSale("d43593c715a56da27d-VOTS"));
 
   // updating database
   const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
@@ -192,6 +197,7 @@ DataManager.loadGame = async function(savefileId) {
 
   // loading nft
   $ksmCachedNFT = JSON.parse(await getMyNfts(ksmInfo.address));
+  $ksmCachedNFTOnSale = JSON.parse(await getNftsForSale("d43593c715a56da27d-VOTS"));
 
   // updating database
   const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
@@ -242,6 +248,7 @@ async function UpdateNFTLoopBody() {
 
   // loading nft
   $ksmCachedNFT = JSON.parse(await getMyNfts($ksmInfo.address));
+  $ksmCachedNFTOnSale = JSON.parse(await getNftsForSale("d43593c715a56da27d-VOTS"));
 
   // updating database
   const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
@@ -337,11 +344,6 @@ GlobalNewNFTItemCallbackReceiver.prototype.OnNewNFTItem = async function (newIte
 //-----------------------------------------------------------------------------
 // Scene_NFTShop
 //
-
-//-----------------------------------------------------------------------------
-// Scene_Shop
-//
-// The scene class of the shop screen.
 
 function Scene_NFTShop() {
   this.initialize(...arguments);
@@ -622,7 +624,7 @@ Scene_NFTShop.prototype.onSellOk = function() {
   this._item = this._sellWindow.item();
   this._sellWindow.hide();
 
-  if (this._sellWindow._nftOnSale.some(e => e.id === this._item.id)) {
+  if ($ksmCachedNFTOnSale.some(e => e.id === this._item.id)) {
     this._cancelNFTSellWindow.show();
     this._cancelNFTSellWindow.activate();
   } else {
@@ -1425,12 +1427,12 @@ Window_NFTShopBuy.prototype.itemAt = function(index) {
 
 Window_NFTShopBuy.prototype.itemMetadata = function() {
   const item = this.itemAt(this.index());
-  return item ? JSON.parse(item.metadata) : null;
+  return item ? JSON.parse(item.metadata).properties.gameData.value : null;
 };
 
 Window_NFTShopBuy.prototype.itemMetadataAt = function(index) {
   const item = this.itemAt(index);
-  return item ? JSON.parse(item.metadata) : null;
+  return item ? JSON.parse(item.metadata).properties.gameData.value : null;
 };
 
 Window_NFTShopBuy.prototype.isCurrentItemEnabled = function() {
@@ -1538,7 +1540,6 @@ Window_NFTShopSell.prototype.onNewNFTItem = async function(newNftItem) {
 };
 
 Window_NFTShopSell.prototype.refresh = async function() {
-  this._nftOnSale = JSON.parse(await getNftsForSale('d43593c715a56da27d-VOTS'));
   this._nftItems = getAllUnequippedNFT();
   Window_Selectable.prototype.refresh.call(this);
   this.select(0);
@@ -1558,12 +1559,12 @@ Window_NFTShopSell.prototype.itemAt = function(index) {
 
 Window_NFTShopSell.prototype.itemMetadata = function() {
   const item = this.itemAt(this.index());
-  return item ? JSON.parse(item.metadata) : null;
+  return item ? JSON.parse(item.metadata).properties.gameData.value : null;
 };
 
 Window_NFTShopSell.prototype.itemMetadataAt = function(index) {
   const item = this.itemAt(index);
-  return item ? JSON.parse(item.metadata) : null;
+  return item ? JSON.parse(item.metadata).properties.gameData.value : null;
 };
 
 Window_NFTShopSell.prototype.isCurrentItemEnabled = function() {
@@ -1588,7 +1589,7 @@ Window_NFTShopSell.prototype.drawItem = function(index) {
   const nameWidth = rect.width - 100;
   this.changePaintOpacity(this.isEnabled(item));
   this.drawItemName(itemMetadata, rect.x, rect.y, nameWidth);
-  if (this._nftOnSale.some(e => e.id === item.id)) {
+  if ($ksmCachedNFTOnSale.some(e => e.id === item.id)) {
     this.drawText("Selling", rect.width - 100, rect.y, 100);
   }
   //this.drawText(price, priceX, rect.y, priceWidth, "right");
@@ -1951,76 +1952,17 @@ Window_SelectNFTAddress.prototype.makeCommandList = function () {
   this.addCommand("Import KSM Address", "import_ksm_address", true);
 };
 
-//-----------------------------------------------------------------------------
-// Window_KSMInfo
-//
-
-// function Window_KSMInfo() {
-//   this.initialize(...arguments);
-// }
-//
-// Window_KSMInfo.prototype = Object.create(Window_Base.prototype);
-// Window_KSMInfo.prototype.constructor = Window_SelectNFTAddress;
-//
-// Window_KSMInfo.prototype.initialize = function (rect) {
-//   Window_Base.prototype.initialize.call(this, rect);
-//   this._updateKSMTD = 0;
-// };
-//
-// Window_KSMInfo.prototype.update = function () {
-//   Window_Base.prototype.update.call(this);
-//
-//   if (this.visible) {
-//     this._updateKSMTD -= SceneManager._smoothDeltaTime / 100;
-//     if (this._updateKSMTD <= 0) {
-//       this._updateKSMTD = 20;
-//       this.refresh();
-//     }
-//   }
-// };
-//
-// Window_KSMInfo.prototype.refresh = async function() {
-//   this.contents.clear();
-//   this.contents.fontSize = 16;
-//   const balance = await getMyBalance($ksmInfo.address);
-//   this.drawText("Address: " + $ksmInfo.address, 0, -10, this.width, "left");
-//   this.drawText("Balance: " + balance.balance, 0, 10, this.width, "left");
-// };
-
 // RMMZ Overrides
 
-// Adding new command in menu
-// make_command_list_alias = Window_MenuCommand.prototype.makeCommandList;
-// Window_MenuCommand.prototype.makeCommandList = function () {
-//   make_command_list_alias.call(this);
-//
-//   const nftShopSymbol = "nftShop";
-//   this.addCommand("NFT Shop", nftShopSymbol, true);
-//   this.changeCommandIndex(nftShopSymbol, 5);
-//   this.setHandler(nftShopSymbol, commandNFTShop);
-// };
-//
-// function commandNFTShop() {
-//   SceneManager.push(Scene_NFTShop);
-// }
-//
-// Window_MenuCommand.prototype.changeCommandIndex = function (symbol, index) {
-//   if (index >= 0 && index < this._list.length) {
-//     const currentIndex = this.findSymbol(symbol);
-//     const currentSymbol = this._list[currentIndex];
-//
-//     let waitingSymbol = this._list[index];
-//     for (let i = index; i < currentIndex; i++) {
-//       const temp = this._list[i + 1];
-//       this._list[i + 1] = waitingSymbol;
-//       waitingSymbol = temp;
-//     }
-//
-//     this._list[index] = currentSymbol;
-//   } else {
-//     throw new RangeError("Command index must be between 0 and " + (this._list.length - 1) + " (inclusive).");
-//   }
-// }
+// Window_EquipItem
+
+window_equip_item_includes_alias = Window_EquipItem.prototype.includes;
+Window_EquipItem.prototype.includes = function(item) {
+  if (item && item.nftId && $ksmCachedNFTOnSale.some(e => e.id === item.nftId)) {
+    return false;
+  }
+  return window_equip_item_includes_alias.call(this, item);
+};
 
 // Window_NameInput
 
@@ -2127,22 +2069,6 @@ Scene_Menu.prototype.ksmAddressWindowRect = function() {
 };
 
 // Scene_Title
-
-const scene_title_create_alias = Scene_Title.prototype.create;
-Scene_Title.prototype.create = async function() {
-  scene_title_create_alias.call(this);
-
-  // this.createKSMInfo();
-  // await waitForInit();
-  // this._windowKSMInfo.show();
-};
-
-// Scene_Title.prototype.createKSMInfo = function() {
-//   const rect = new Rectangle(0, 0, 500, 60);
-//   this._windowKSMInfo = new Window_KSMInfo(rect)
-//   this._windowKSMInfo.hide();
-//   this.addWindow(this._windowKSMInfo);
-// };
 
 Scene_Title.prototype.createCommandWindow = function () {
   const background = $dataSystem.titleCommandWindow.background;

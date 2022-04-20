@@ -41,7 +41,12 @@ let initialized = false;
 init();
 
 async function init() {
-  const ksmEndpoints = (await StorageManager.loadKSMEndpoints());
+  let ksmEndpoints;
+  try {
+    ksmEndpoints = (await StorageManager.loadKSMEndpoints());
+  } catch {
+
+  }
   const ksmEndpointsValid = ksmEndpoints && ksmEndpoints.ksmEndpoint && ksmEndpoints.rmrkEndpoint;
 
   if (ksmEndpointsValid) {

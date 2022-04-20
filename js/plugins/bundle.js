@@ -75303,22 +75303,19 @@ window.encrypt = (data, key) => {
 let initialized = false,
     provider,
     api,
-    keyring,
-    votServer; //'wss://kusama-rpc.polkadot.io'
+    votServer;
+let ss58Format = 2; //'wss://kusama-rpc.polkadot.io'
 //ss58Format: 2 (for kusama)
 
-window.initializeVeilOfTimeNft = async (wsProvider, veilOfTimeServerHttpApiAddress, ss58Format) => {
+window.initializeVeilOfTimeNft = async (wsProvider, veilOfTimeServerHttpApiAddress, ss58) => {
   try {
     console.log('initializing');
     await (0, _utilCrypto.cryptoWaitReady)();
     provider = new _api.WsProvider(wsProvider);
+    ss58Format = ss58;
     api = await new _api.ApiPromise({
       provider
     }).isReady;
-    keyring = new _keyring.Keyring({
-      type: 'sr25519',
-      ss58Format
-    });
     votServer = veilOfTimeServerHttpApiAddress;
     initialized = true;
     console.log('initizliaed');
@@ -75390,7 +75387,7 @@ window.listNft = async (sender, nftId, price) => {
           console.log(`pending...`);
         } else if (result.status.isFinalized) {
           console.log(result);
-          //writeToScreen(JSON.stringify(result), null);
+//           writeToScreen(JSON.stringify(result), null);
           return res(true);
         }
       });
@@ -75426,6 +75423,21 @@ window.getNftsForSale = collection => {
 
     console.log(votServer + "/get_nfts_for_sale_in_collection/" + collection);
     xmlHttp.open("GET", votServer + "/get_nfts_for_sale_in_collection/" + collection, true); // true for asynchronous
+
+    xmlHttp.send(null);
+  });
+};
+
+window.getWhiteListedCollections = address => {
+  return new Promise(res => {
+    let xmlHttp = new XMLHttpRequest();
+
+    xmlHttp.onreadystatechange = function () {
+      if (xmlHttp.readyState === 4 && xmlHttp.status === 200) return res(xmlHttp.responseText);
+    };
+
+    console.log(votServer + "/get_whitelisted_collections");
+    xmlHttp.open("GET", votServer + "/get_whitelisted_collections", true); // true for asynchronous
 
     xmlHttp.send(null);
   });
@@ -75476,7 +75488,7 @@ window.sendNft = async (sender, nftId, recipient) => {
         console.log(`pending...`);
       } else if (result.status.isFinalized) {
         console.log(result);
-        //writeToScreen(JSON.stringify(result), null);
+//         writeToScreen(JSON.stringify(result), null);
         return {
           result: 'success'
         };
@@ -75493,11 +75505,11 @@ window.sendNft = async (sender, nftId, recipient) => {
 
 window.getNewAddress = async (password = false) => {
   try {
-    if (!initialized) {
-      throw new Error("Not Initialized");
-    }
-
     const mnemonic = (0, _utilCrypto.mnemonicGenerate)();
+    let keyring = new _keyring.Keyring({
+      type: 'sr25519',
+      ss58Format
+    });
     const keypair = keyring.addFromUri(mnemonic, {
       name: 'sr25519'
     });
@@ -75523,14 +75535,13 @@ window.getNewAddress = async (password = false) => {
 
 window.getNewAddressFromMnemonic = async mnemonic => {
   try {
-    if (!initialized) {
-      throw new Error("Not Initialized");
-    }
-
-    const res = keyring.addFromUri(mnemonic, {
+    let keyring = new _keyring.Keyring({
+      type: 'sr25519',
+      ss58Format
+    });
+    return keyring.addFromUri(mnemonic, {
       name: 'sr25519'
     });
-    return res;
   } catch (error) {
     console.error(`Error getting New Address From Mnemonic : ${error}`);
     return {

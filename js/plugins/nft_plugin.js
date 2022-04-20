@@ -13,10 +13,47 @@ PluginManager.registerCommand("nft_plugin", "openNFTShop", (args) => {
 
 // Common
 
+$ksmEndpoints = null;
+
+function KSMEndpoints() {
+  this.initialize(...arguments);
+}
+
+KSMEndpoints.prototype.initialize = function() {
+  this.ksmEndpoint = "ws://143.198.116.85:9944";
+  this.rmrkEndpoint = "http://143.198.116.85:3000";
+};
+
+StorageManager.saveKSMEndpoints = function() {
+  return this.objectToJson($ksmEndpoints)
+      .then(json => this.jsonToZip(json))
+      .then(zip => this.saveZip("ksmEndpoints", zip));
+};
+
+StorageManager.loadKSMEndpoints = function() {
+  return this.loadZip("ksmEndpoints")
+      .then(zip => this.zipToJson(zip))
+      .then(json => this.jsonToObject(json));
+};
+
 let initialized = false;
-initializeVeilOfTimeNft("ws://143.198.116.85:9944", "http://143.198.116.85:3000", 2).then(() => {
-  initialized = true;
-});
+
+init();
+
+async function init() {
+  const ksmEndpoints = (await StorageManager.loadKSMEndpoints());
+  const ksmEndpointsValid = ksmEndpoints && ksmEndpoints.ksmEndpoint && ksmEndpoints.rmrkEndpoint;
+
+  if (ksmEndpointsValid) {
+    $ksmEndpoints = ksmEndpoints;
+  } else {
+    $ksmEndpoints = new KSMEndpoints();
+  }
+
+  initializeVeilOfTimeNft($ksmEndpoints.ksmEndpoint, $ksmEndpoints.rmrkEndpoint, 2).then(() => {
+    initialized = true;
+  });
+}
 
 async function waitForInit() {
   while (!initialized) {
@@ -342,6 +379,159 @@ GlobalNewNFTItemCallbackReceiver.prototype.OnNewNFTItem = async function (newIte
 // Scenes
 
 //-----------------------------------------------------------------------------
+// Scene_ChangeKSMEndpoint
+//
+
+function Scene_ChangeKSMEndpoint() {
+  this.initialize(...arguments);
+}
+
+Scene_ChangeKSMEndpoint.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_ChangeKSMEndpoint.prototype.constructor = Scene_ChangeKSMEndpoint;
+
+Scene_ChangeKSMEndpoint.prototype.initialize = function() {
+  Scene_MenuBase.prototype.initialize.call(this);
+  this._maxLength = 32;
+};
+
+Scene_ChangeKSMEndpoint.prototype.prepare = function(maxLength) {
+  this._maxLength = maxLength;
+};
+
+Scene_ChangeKSMEndpoint.prototype.create = function() {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createEditWindow();
+  this.createInputWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_ChangeKSMEndpoint.prototype.start = function() {
+  Scene_MenuBase.prototype.start.call(this);
+  this._editWindow.refresh();
+};
+
+Scene_ChangeKSMEndpoint.prototype.createEditWindow = function() {
+  const rect = this.editWindowRect();
+  this._editWindow = new Window_EndpointEdit(rect);
+  this._editWindow.setup($ksmEndpoints.ksmEndpoint,"ws://143.198.116.85:9944", this._maxLength);
+  this.addWindow(this._editWindow);
+};
+
+Scene_ChangeKSMEndpoint.prototype.editWindowRect = function() {
+  const inputWindowHeight = this.calcWindowHeight(9, true);
+  const padding = $gameSystem.windowPadding();
+  const ww = 600;
+  const wh = ImageManager.faceHeight + padding * 2;
+  const wx = (Graphics.boxWidth - ww) / 2;
+  const wy = (Graphics.boxHeight - (wh + inputWindowHeight + 8)) / 2;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_ChangeKSMEndpoint.prototype.createInputWindow = function() {
+  const rect = this.inputWindowRect();
+  this._inputWindow = new Window_NameInput(rect);
+  this._inputWindow.isKSMInput = true;
+  this._inputWindow.setEditWindow(this._editWindow);
+  this._inputWindow.setHandler("ok", this.onInputOk.bind(this));
+  this.addWindow(this._inputWindow);
+};
+
+Scene_ChangeKSMEndpoint.prototype.inputWindowRect = function() {
+  const wx = this._editWindow.x;
+  const wy = this._editWindow.y + this._editWindow.height + 8;
+  const ww = this._editWindow.width;
+  const wh = this.calcWindowHeight(9, true);
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_ChangeKSMEndpoint.prototype.onInputOk = async function() {
+  $ksmEndpoints.ksmEndpoint = this._editWindow.endpoint();
+  StorageManager.saveKSMEndpoints();
+  SceneManager.pop();
+};
+
+//-----------------------------------------------------------------------------
+// Scene_ChangeRMRKEndpoint
+//
+
+function Scene_ChangeRMRKEndpoint() {
+  this.initialize(...arguments);
+}
+
+Scene_ChangeRMRKEndpoint.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_ChangeRMRKEndpoint.prototype.constructor = Scene_ChangeRMRKEndpoint;
+
+Scene_ChangeRMRKEndpoint.prototype.initialize = function() {
+  Scene_MenuBase.prototype.initialize.call(this);
+  this._maxLength = 32;
+};
+
+Scene_ChangeRMRKEndpoint.prototype.prepare = function(maxLength) {
+  this._maxLength = maxLength;
+};
+
+Scene_ChangeRMRKEndpoint.prototype.create = function() {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createEditWindow();
+  this.createInputWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_ChangeRMRKEndpoint.prototype.start = function() {
+  Scene_MenuBase.prototype.start.call(this);
+  this._editWindow.refresh();
+};
+
+Scene_ChangeRMRKEndpoint.prototype.createEditWindow = function() {
+  const rect = this.editWindowRect();
+  this._editWindow = new Window_EndpointEdit(rect);
+  this._editWindow.setup($ksmEndpoints.rmrkEndpoint, "http://143.198.116.85:3000", this._maxLength);
+  this.addWindow(this._editWindow);
+};
+
+Scene_ChangeRMRKEndpoint.prototype.editWindowRect = function() {
+  const inputWindowHeight = this.calcWindowHeight(9, true);
+  const padding = $gameSystem.windowPadding();
+  const ww = 600;
+  const wh = ImageManager.faceHeight + padding * 2;
+  const wx = (Graphics.boxWidth - ww) / 2;
+  const wy = (Graphics.boxHeight - (wh + inputWindowHeight + 8)) / 2;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_ChangeRMRKEndpoint.prototype.createInputWindow = function() {
+  const rect = this.inputWindowRect();
+  this._inputWindow = new Window_NameInput(rect);
+  this._inputWindow.isKSMInput = true;
+  this._inputWindow.setEditWindow(this._editWindow);
+  this._inputWindow.setHandler("ok", this.onInputOk.bind(this));
+  this.addWindow(this._inputWindow);
+};
+
+Scene_ChangeRMRKEndpoint.prototype.inputWindowRect = function() {
+  const wx = this._editWindow.x;
+  const wy = this._editWindow.y + this._editWindow.height + 8;
+  const ww = this._editWindow.width;
+  const wh = this.calcWindowHeight(9, true);
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_ChangeRMRKEndpoint.prototype.onInputOk = async function() {
+  $ksmEndpoints.rmrkEndpoint = this._editWindow.endpoint();
+  StorageManager.saveKSMEndpoints();
+  SceneManager.pop();
+};
+
+
+//-----------------------------------------------------------------------------
 // Scene_NFTShop
 //
 
@@ -437,7 +627,7 @@ Scene_NFTShop.prototype.dummyWindowRect = function() {
 
 Scene_NFTShop.prototype.createStatusWindow = function() {
   const rect = this.statusWindowRect();
-  this._statusWindow = new Window_ShopStatus(rect);
+  this._statusWindow = new Window_NFTShopStatus(rect);
   this._statusWindow.hide();
   this.addWindow(this._statusWindow);
 };
@@ -961,6 +1151,142 @@ Scene_NFTPhrase.prototype.onInputOk = async function() {
 };
 
 // Windows
+
+//-----------------------------------------------------------------------------
+// Window_NFTShopStatus
+//
+
+function Window_NFTShopStatus() {
+  this.initialize(...arguments);
+}
+
+Window_NFTShopStatus.prototype = Object.create(Window_ShopStatus.prototype);
+Window_NFTShopStatus.prototype.constructor = Window_NFTShopStatus;
+
+Window_NFTShopStatus.prototype.initialize = function(rect) {
+  Window_ShopStatus.prototype.initialize.call(this, rect);
+};
+
+Window_ShopStatus.prototype.isEquipItem = function() {
+  return true;
+};
+
+//-----------------------------------------------------------------------------
+// Window_EndpointEdit
+//
+
+function Window_EndpointEdit() {
+  this.initialize(...arguments);
+}
+
+Window_EndpointEdit.prototype = Object.create(Window_StatusBase.prototype);
+Window_EndpointEdit.prototype.constructor = Window_EndpointEdit;
+
+Window_EndpointEdit.prototype.initialize = function(rect) {
+  Window_StatusBase.prototype.initialize.call(this, rect);
+  this._maxLength = 0;
+  this._endpoint = "";
+  this._index = 0;
+  this._defaultEndpoint = 0;
+  this.deactivate();
+};
+
+Window_EndpointEdit.prototype.setup = function(currentEndpoints, defaultEndpoint, maxLength) {
+  this._maxLength = maxLength;
+  this._endpoint = currentEndpoints.slice(0, this._maxLength);
+  this._index = this._endpoint.length;
+  this._defaultEndpoint = defaultEndpoint;
+};
+
+Window_EndpointEdit.prototype.endpoint = function() {
+  return this._endpoint;
+};
+
+Window_EndpointEdit.prototype.restoreDefault = function() {
+  this._endpoint = this._defaultEndpoint;
+  this._index = this._endpoint.length;
+  this.refresh();
+  return this._endpoint.length > 0;
+};
+
+Window_EndpointEdit.prototype.add = function(ch) {
+  if (this._index < this._maxLength) {
+    this._endpoint += ch;
+    this._index++;
+    this.refresh();
+    return true;
+  } else {
+    return false;
+  }
+};
+
+Window_EndpointEdit.prototype.back = function() {
+  if (this._index > 0) {
+    this._index--;
+    this._endpoint = this._endpoint.slice(0, this._index);
+    this.refresh();
+    return true;
+  } else {
+    return false;
+  }
+};
+
+Window_EndpointEdit.prototype.charWidth = function() {
+  return this.textWidth("A");
+};
+
+Window_EndpointEdit.prototype.left = function() {
+  const endpointCenter = this.innerWidth / 2;
+  const endpointWidth = (this._maxLength + 1) * this.charWidth();
+  return Math.min(endpointCenter - endpointWidth / 2, this.innerWidth - endpointWidth);
+};
+
+Window_EndpointEdit.prototype.itemRect = function(index) {
+  const x = this.left() + index * this.charWidth();
+  const y = 54;
+  const width = this.charWidth();
+  const height = this.lineHeight();
+  return new Rectangle(x, y, width, height);
+};
+
+Window_EndpointEdit.prototype.underlineRect = function(index) {
+  const rect = this.itemRect(index);
+  rect.x++;
+  rect.y += rect.height - 4;
+  rect.width -= 2;
+  rect.height = 2;
+  return rect;
+};
+
+Window_EndpointEdit.prototype.underlineColor = function() {
+  return ColorManager.normalColor();
+};
+
+Window_EndpointEdit.prototype.drawUnderline = function(index) {
+  const rect = this.underlineRect(index);
+  const color = this.underlineColor();
+  this.contents.paintOpacity = 48;
+  this.contents.fillRect(rect.x, rect.y, rect.width, rect.height, color);
+  this.contents.paintOpacity = 255;
+};
+
+Window_EndpointEdit.prototype.drawChar = function(index) {
+  const rect = this.itemRect(index);
+  this.resetTextColor();
+  this.drawText(this._endpoint[index] || "", rect.x, rect.y);
+};
+
+Window_EndpointEdit.prototype.refresh = function() {
+  this.contents.clear();
+  for (let i = 0; i < this._maxLength; i++) {
+    this.drawUnderline(i);
+  }
+  for (let j = 0; j < this._endpoint.length; j++) {
+    this.drawChar(j);
+  }
+  const rect = this.itemRect(this._index);
+  this.setCursorRect(rect.x, rect.y, rect.width, rect.height);
+};
 
 //-----------------------------------------------------------------------------
 // Window_CancelNFTSell
@@ -1953,6 +2279,67 @@ Window_SelectNFTAddress.prototype.makeCommandList = function () {
 };
 
 // RMMZ Overrides
+
+// Scene_Options
+
+Scene_Options.prototype.createOptionsWindow = function() {
+  const rect = this.optionsWindowRect();
+  this._optionsWindow = new Window_Options(rect);
+  this._optionsWindow.setHandler("cancel", this.popScene.bind(this));
+  this.addWindow(this._optionsWindow);
+};
+
+Scene_Options.prototype.maxCommands = function() {
+  // Increase this value when adding option items.
+  return 9;
+};
+
+
+// Window_Options
+
+window_options_make_command_list_alias = Window_Options.prototype.makeCommandList;
+Window_Options.prototype.makeCommandList = function() {
+  window_options_make_command_list_alias.call(this);
+  this.addKSMOptions();
+};
+
+Window_Options.prototype.addKSMOptions = function() {
+  this.addCommand("KSM Endpoint", "ksmEndpoint");
+  this.addCommand("RMRK Endpoint", "rmrkEndpoint");
+};
+
+window_options_draw_item_alias = Window_Options.prototype.drawItem;
+Window_Options.prototype.drawItem = function(index) {
+  switch (this.commandSymbol(index)) {
+    case "ksmEndpoint":
+    case "rmrkEndpoint":
+      const title = this.commandName(index);
+      const rect = this.itemLineRect(index);
+      const titleWidth = rect.width;
+      this.resetTextColor();
+      this.changePaintOpacity(this.isCommandEnabled(index));
+      this.drawText(title, rect.x, rect.y, titleWidth, "left");
+      break;
+    default:
+      window_options_draw_item_alias.call(this, index);
+      break;
+  }
+};
+
+window_options_process_ok_alias = Window_Options.prototype.processOk;
+Window_Options.prototype.processOk = function() {
+  switch (this.commandSymbol(this.index())) {
+    case "ksmEndpoint":
+      SceneManager.push(Scene_ChangeKSMEndpoint);
+      break;
+    case "rmrkEndpoint":
+      SceneManager.push(Scene_ChangeRMRKEndpoint);
+      break;
+    default:
+      window_options_draw_item_alias.call(this);
+      break;
+  }
+};
 
 // Window_EquipItem
 

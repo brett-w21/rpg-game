@@ -75387,7 +75387,6 @@ window.listNft = async (sender, nftId, price) => {
           console.log(`pending...`);
         } else if (result.status.isFinalized) {
           console.log(result);
-//           writeToScreen(JSON.stringify(result), null);
           return res(true);
         }
       });
@@ -75428,7 +75427,7 @@ window.getNftsForSale = collection => {
   });
 };
 
-window.getWhiteListedCollections = address => {
+window.getWhiteListedCollections = () => {
   return new Promise(res => {
     let xmlHttp = new XMLHttpRequest();
 
@@ -75473,34 +75472,31 @@ window.getNft = nftId => {
 };
 
 window.sendNft = async (sender, nftId, recipient) => {
-  try {
-    if (!initialized) {
-      throw new Error("Not Initialized");
-    }
-
-    let remarks = [];
-    remarks.push(api.tx.system.remark(`RMRK::SEND::2.0.0::${nftId}::${recipient}`));
-    const tx = api.tx.utility.batchAll(remarks);
-    await tx.signAndSend(sender, {
-      signer: sender.sign
-    }, async result => {
-      if (result.status.isInBlock) {
-        console.log(`pending...`);
-      } else if (result.status.isFinalized) {
-        console.log(result);
-//         writeToScreen(JSON.stringify(result), null);
-        return {
-          result: 'success'
-        };
+  return new Promise(async (res, rej) => {
+    try {
+      if (!initialized) {
+        console.error('Not Initialized');
+        return rej(false);
       }
-    });
-  } catch (error) {
-    console.error(`Error sending : ${error}`);
-    return {
-      result: 'error',
-      error
-    };
-  }
+
+      let remarks = [];
+      remarks.push(api.tx.system.remark(`RMRK::SEND::2.0.0::${nftId}::${recipient}`));
+      const tx = api.tx.utility.batchAll(remarks);
+      await tx.signAndSend(sender, {
+        signer: sender.sign
+      }, async result => {
+        if (result.status.isInBlock) {
+          console.log(`pending...`);
+        } else if (result.status.isFinalized) {
+          console.log(result);
+          return res(true);
+        }
+      });
+    } catch (error) {
+      console.error(`Error sending : ${error}`);
+      return rej(false);
+    }
+  });
 };
 
 window.getNewAddress = async (password = false) => {

@@ -4,10 +4,18 @@
  * @target MZ
  *
  * @command openNFTShop
+ * @text Open NFT Shop
+ * @desc
  *
+ * @arg collectionId
+ * @type string
+ * @default d43593c715a56da27d-VOTS
+ * @text Collection ID
+ * @desc
  */
 
 PluginManager.registerCommand("nft_plugin", "openNFTShop", (args) => {
+  collectionId = args.collectionId;
   SceneManager.push(Scene_NFTShop);
 });
 
@@ -37,6 +45,7 @@ StorageManager.loadKSMEndpoints = function() {
 };
 
 let initialized = false;
+let initializationFailed = false;
 
 init();
 
@@ -44,9 +53,7 @@ async function init() {
   let ksmEndpoints;
   try {
     ksmEndpoints = (await StorageManager.loadKSMEndpoints());
-  } catch {
-
-  }
+  } catch { }
   const ksmEndpointsValid = ksmEndpoints && ksmEndpoints.ksmEndpoint && ksmEndpoints.rmrkEndpoint;
 
   if (ksmEndpointsValid) {
@@ -55,31 +62,49 @@ async function init() {
     $ksmEndpoints = new KSMEndpoints();
   }
 
-  initializeVeilOfTimeNft($ksmEndpoints.ksmEndpoint, $ksmEndpoints.rmrkEndpoint, 2).then(() => {
-    initialized = true;
-  });
+  try {
+    initializeVeilOfTimeNft($ksmEndpoints.ksmEndpoint, $ksmEndpoints.rmrkEndpoint, 2).then(() => {
+      initialized = true;
+    });
+  } catch {
+    initializationFailed = true;
+  }
 }
 
 async function waitForInit() {
-  while (!initialized) {
+  while (!initialized && !initializationFailed) {
     await new Promise(r => setTimeout(r, 100));
   }
 }
 
-function updateDatabaseWithNFTS(nfts) {
+async function getAllNFTOnSale() {
+  const result = [];
+  const collections = JSON.parse(await getWhiteListedCollections());
+  for (let collection of collections) {
+    const list = JSON.parse(await getNftsForSale(collection));
+    for (let nft of list) {
+      result.push(nft);
+    }
+  }
+  return result;
+}
+
+function updateDatabaseWithNFTS(nfts, collectionId) {
   const newItems = [];
   for (let nft of nfts) {
     const metadata = JSON.parse(nft.metadata);
-    const gameItemValue = metadata.properties.gameData.value;
-    gameItemValue.id += 51;
-    gameItemValue.nftId = nft.id;
-    $dataWeapons[gameItemValue.id] = gameItemValue;
-    newItems.push(gameItemValue);
+    if (metadata.properties) {
+      const gameItemValue = metadata.properties.gameData.value;
+      gameItemValue.id += 51;
+      gameItemValue.nftId = nft.id;
+      $dataWeapons[gameItemValue.id] = gameItemValue;
+      newItems.push(gameItemValue);
+    }
   }
   return newItems;
 }
 
-function updateInventoryWithNFTS(nftItems) {
+function updateInventoryWithNFTS(nftItems, collectionId) {
   const newItems = [];
 
   // updating player inventory
@@ -100,7 +125,7 @@ function updateInventoryWithNFTS(nftItems) {
   return newItems;
 }
 
-function isNFTInInventory(nftId) {
+function isNFTInInventory(nftId, collectionId) {
   const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
   for (let weaponId of Object.keys($gameParty._weapons)) {
     if (Number(weaponId) === inGameWeaponId) {
@@ -110,7 +135,7 @@ function isNFTInInventory(nftId) {
   return false;
 }
 
-function isNFTEquipped(nftId) {
+function isNFTEquipped(nftId, collectionId) {
   const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
   for (let actorId of $gameParty._actors) {
     const actor = $gameActors.actor(actorId);
@@ -140,12 +165,17 @@ function timeout(ms) {
 
 // Data Manager
 
+const WEAPONS_COLLECTION = "d43593c715a56da27d-VOTS";
+const ESSENTIA_COLLECTION = "d43593c715a56da27d-ESSENTIA";
+
 $ksmInfo = null;
 $ksmCachedBalance = 0;
 $ksmCachedBalanceHuman = 0;
 $ksmCachedNFT = [];
 $ksmCachedNFTOnSale = [];
+
 let isBuying = false;
+let collectionId = "";
 
 function KSMInfo() {
   this.initialize(...arguments);
@@ -185,6 +215,10 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
 
   await waitForInit();
 
+  if (initializationFailed) {
+    return;
+  }
+
   if (ksmPhrase) {
     const response = await getNewAddressFromMnemonic(this._editWindow.phrase());
 
@@ -205,7 +239,7 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
 
   // loading nft
   $ksmCachedNFT = JSON.parse(await getMyNfts($ksmInfo.address));
-  $ksmCachedNFTOnSale = JSON.parse(await getNftsForSale("d43593c715a56da27d-VOTS"));
+  $ksmCachedNFTOnSale = (await getAllNFTOnSale());
 
   // updating database
   const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
@@ -216,6 +250,10 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
 
 const data_manager_load_game_alias = DataManager.loadGame;
 DataManager.loadGame = async function(savefileId) {
+  if (initializationFailed) {
+    return (await data_manager_load_game_alias.call(this, savefileId));
+  }
+
   await waitForInit();
 
   // read and validate ksm address
@@ -239,7 +277,7 @@ DataManager.loadGame = async function(savefileId) {
 
   // loading nft
   $ksmCachedNFT = JSON.parse(await getMyNfts(ksmInfo.address));
-  $ksmCachedNFTOnSale = JSON.parse(await getNftsForSale("d43593c715a56da27d-VOTS"));
+  $ksmCachedNFTOnSale = (await getAllNFTOnSale());
 
   // updating database
   const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
@@ -284,13 +322,17 @@ function NextUpdateNFTLoop() {
 }
 
 async function UpdateNFTLoopBody() {
+  if (initializationFailed) {
+    return;
+  }
+
   $ksmCachedBalance = (await getMyBalance($ksmInfo.address)).balance;
   $ksmCachedBalanceHuman = (await getMyBalance($ksmInfo.address)).balanceHuman;
   OnBalanceUpdate($ksmCachedBalance);
 
   // loading nft
   $ksmCachedNFT = JSON.parse(await getMyNfts($ksmInfo.address));
-  $ksmCachedNFTOnSale = JSON.parse(await getNftsForSale("d43593c715a56da27d-VOTS"));
+  $ksmCachedNFTOnSale = (await getAllNFTOnSale());
 
   // updating database
   const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
@@ -1032,7 +1074,6 @@ Scene_NFTNotification.prototype.createWindow = function() {
   this.addWindow(this._windowNftNotification);
 };
 
-
 //-----------------------------------------------------------------------------
 // Scene_SelectKSMAddress
 //
@@ -1314,7 +1355,6 @@ Window_CancelNFTSell.prototype.makeCommandList = function () {
 };
 
 Window_CancelNFTSell.prototype.refresh = function () {
-  //Window_Base.prototype.createContents.call(this);
   Window_Command.prototype.refresh.call(this);
   this.drawText("Are you sure you want to withdraw the item from sale?", 0, this.height / 2 - 80, this.width, "center");
 };
@@ -1727,7 +1767,13 @@ Window_NFTShopBuy.prototype.constructor = Window_NFTShopBuy;
 
 Window_NFTShopBuy.prototype.initialize = async function(rect) {
   Window_Selectable.prototype.initialize.call(this, rect);
-  this._nftItems = JSON.parse(await getNftsForSale('d43593c715a56da27d-VOTS')).filter(e => e.owner !== $ksmInfo.address);
+
+  if (initialized) {
+    this._nftItems = JSON.parse(await getNftsForSale(collectionId)).filter(e => e.owner !== $ksmInfo.address);
+  } else {
+    this._nftItems = [];
+  }
+
   this.refresh();
   this.select(0);
   SubscribeToNewNFTItems(this);
@@ -1739,7 +1785,7 @@ Window_NFTShopBuy.prototype.destroy = function(options) {
 };
 
 Window_NFTShopBuy.prototype.onNewNFTItem = async function(newNftItem) {
-  this._nftItems = JSON.parse(await getNftsForSale('d43593c715a56da27d-VOTS'));
+  this._nftItems = JSON.parse(await getNftsForSale(collectionId));
   this.refresh();
   this.select(0);
 };
@@ -1956,7 +2002,13 @@ Window_NFTShopList.prototype.constructor = Window_NFTShopList;
 
 Window_NFTShopList.prototype.initialize = async function (rect) {
   Window_Selectable.prototype.initialize.call(this, rect);
-  this._nftItems = JSON.parse(await getNftsForSale('d43593c715a56da27d-VOTS'));
+
+  if (initialized) {
+    this._nftItems = (await getAllNFTOnSale());
+  } else {
+    this._nftItems = [];
+  }
+
   this.refresh();
 };
 
@@ -2476,7 +2528,14 @@ Scene_Title.prototype.createCommandWindow = function () {
 Scene_Title.prototype.commandNewGame = async function () {
   await waitForInit();
   this._commandWindow.close();
-  SceneManager.push(Scene_SelectKSMAddress);
+
+  if (initialized) {
+    SceneManager.push(Scene_SelectKSMAddress);
+  } else {
+    this.fadeOutAll();
+    await DataManager.setupNewGame(true);
+    SceneManager.goto(Scene_Map);
+  }
 };
 
 Scene_Title.prototype.commandContinue = async function () {

@@ -126,26 +126,35 @@ function updateInventoryWithNFTS(nftItems, collectionId) {
 }
 
 function isNFTInInventory(nftId, collectionId) {
-  const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
-  for (let weaponId of Object.keys($gameParty._weapons)) {
-    if (Number(weaponId) === inGameWeaponId) {
-      return true;
+  try {
+    const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
+    for (let weaponId of Object.keys($gameParty._weapons)) {
+      if (Number(weaponId) === inGameWeaponId) {
+        return true;
+      }
     }
+  } catch {
+
   }
+
   return false;
 }
 
 function isNFTEquipped(nftId, collectionId) {
-  const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
-  for (let actorId of $gameParty._actors) {
-    const actor = $gameActors.actor(actorId);
+  try {
+    const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
+    for (let actorId of $gameParty._actors) {
+      const actor = $gameActors.actor(actorId);
 
-    for (let gameItem of actor._equips) {
-      if (gameItem._dataClass === "weapon" && gameItem._itemId === inGameWeaponId) {
-        return true;
+      for (let gameItem of actor._equips) {
+        if (gameItem._dataClass === "weapon" && gameItem._itemId === inGameWeaponId) {
+          return true;
+        }
       }
     }
+  } catch {
   }
+
   return false;
 }
 
@@ -1936,12 +1945,22 @@ Window_NFTShopSell.prototype.itemAt = function(index) {
 
 Window_NFTShopSell.prototype.itemMetadata = function() {
   const item = this.itemAt(this.index());
-  return item ? JSON.parse(item.metadata).properties.gameData.value : null;
+  try {
+    return item ? JSON.parse(item.metadata).properties.gameData.value : null;
+  }
+  catch {
+  }
+  return null;
 };
 
 Window_NFTShopSell.prototype.itemMetadataAt = function(index) {
   const item = this.itemAt(index);
-  return item ? JSON.parse(item.metadata).properties.gameData.value : null;
+  try {
+  	return item ? JSON.parse(item.metadata).properties.gameData.value : null;
+  }
+  catch {
+  }
+  return null;
 };
 
 Window_NFTShopSell.prototype.isCurrentItemEnabled = function() {

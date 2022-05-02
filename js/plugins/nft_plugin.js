@@ -89,14 +89,42 @@ async function getAllNFTOnSale() {
   return result;
 }
 
-function updateDatabaseWithNFTS(nfts, collectionId) {
+function updateDatabaseWithNFTS_AutoCollections(nftList) {
+  const result = [];
+
+  const collections = {};
+  for (let nft of nftList) {
+    if (collections[nft.collection]) {
+      collections[nft.collection].push(nft);
+    } else {
+      collections[nft.collection] = [nft];
+    }
+  }
+
+  for (let collectionId of Object.keys(collections)) {
+    result.push(...updateDatabaseWithNFTS(collections[collectionId], collectionId));
+  }
+
+  return result;
+}
+
+function updateDatabaseWithNFTS(nftList, collectionId) {
+  switch (collectionId) {
+    case WEAPONS_COLLECTION: return updateDatabaseWithNFTS_Weapon(nftList);
+    case ESSENTIA_COLLECTION: return updateDatabaseWithNFTS_Essentia(nftList);
+    default: throw new Error("updateDatabaseWithNFTS, unknown nft collection, id: " + collectionId);
+  }
+}
+
+function updateDatabaseWithNFTS_Weapon(nftList) {
   const newItems = [];
-  for (let nft of nfts) {
+  for (let nft of nftList) {
     const metadata = JSON.parse(nft.metadata);
     if (metadata.properties) {
       const gameItemValue = metadata.properties.gameData.value;
       gameItemValue.id += 51;
       gameItemValue.nftId = nft.id;
+      gameItemValue.nftCollectionId = nft.collection;
       $dataWeapons[gameItemValue.id] = gameItemValue;
       newItems.push(gameItemValue);
     }
@@ -104,65 +132,212 @@ function updateDatabaseWithNFTS(nfts, collectionId) {
   return newItems;
 }
 
-function updateInventoryWithNFTS(nftItems, collectionId) {
+function updateDatabaseWithNFTS_Essentia(nftList) {
+  const newItems = [];
+  for (let nft of nftList) {
+    const metadata = JSON.parse(nft.metadata);
+    if (metadata.properties) {
+      const gameItemValue = metadata.properties.gameData.value;
+
+      const essentiaData = {
+        id: 102 + gameItemValue.i,
+        atypeId: 0,
+        description: metadata.description,
+        etypeId: 2,
+        traits: [{code:22,dataId:1,value:0}],
+        iconIndex: 0,
+        name: metadata.name,
+        note: "<materia>type: support\nap: 10000, 30000, 60000, 120000\nprice: 1400000\npaired: all\nlimited</materia>",
+        params: [0,0,0,0,0,0,0,0],
+        price: 0
+      };
+      essentiaData.nftId = nft.id;
+      essentiaData.nftCollectionId = nft.collection;
+
+      $dataArmors[essentiaData.id] = essentiaData;
+      newItems.push(essentiaData);
+    }
+  }
+  VictorEngine.processNotetags($dataArmors, 5);
+  return newItems;
+}
+
+function updateInventoryWithNFTS_AutoCollections(nftList) {
+  const result = [];
+
+  const collections = {};
+  for (let nft of nftList) {
+    if (collections[nft.nftCollectionId]) {
+      collections[nft.nftCollectionId].push(nft);
+    } else {
+      collections[nft.nftCollectionId] = [nft];
+    }
+  }
+
+  for (let collectionId of Object.keys(collections)) {
+    result.push(...updateInventoryWithNFTS(collections[collectionId], collectionId));
+  }
+
+  return result;
+}
+
+function updateInventoryWithNFTS(nftList, collectionId) {
+  switch (collectionId) {
+    case WEAPONS_COLLECTION: return updateInventoryWithNFTS_Weapon(nftList);
+    case ESSENTIA_COLLECTION: return updateInventoryWithNFTS_Essentia(nftList);
+    default: throw new Error("updateInventoryWithNFTS, unknown nft collection, id: " + collectionId);
+  }
+}
+
+function updateInventoryWithNFTS_Weapon(nftList) {
   const newItems = [];
 
   // updating player inventory
-  for (let nftItem of nftItems) {
-    if (isNFTInInventory(nftItem.nftId)) {
+  for (let nft of nftList) {
+    if (isNFTInInventory_Weapon(nft.nftId)) {
       continue;
     }
 
-    if (isNFTEquipped(nftItem.nftId)) {
+    if (isNFTEquipped_Weapon(nft.nftId)) {
       continue;
     }
 
     // adding new item
-    $gameParty._weapons[nftItem.id] = 1;
-    newItems.push(nftItem);
+    $gameParty._weapons[nft.id] = 1;
+    newItems.push(nft);
   }
 
   return newItems;
 }
 
-function isNFTInInventory(nftId, collectionId) {
-  try {
-    const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
+function isNFTInInventory_Weapon(nftId) {
+  const inGameWeapons = $dataWeapons.filter(x => x && x.nftId === nftId);
+  if (inGameWeapons.length > 0) {
+    const inGameWeaponId = inGameWeapons[0].id;
     for (let weaponId of Object.keys($gameParty._weapons)) {
       if (Number(weaponId) === inGameWeaponId) {
         return true;
       }
     }
-  } catch {
-
   }
-
   return false;
 }
 
-function isNFTEquipped(nftId, collectionId) {
-  try {
-    const inGameWeaponId = $dataWeapons.filter(x => x && x.nftId === nftId)[0].id;
+function isNFTEquipped_Weapon(nftId) {
+  const inGameWeapons = $dataWeapons.filter(x => x && x.nftId === nftId);
+  if (inGameWeapons.length > 0) {
+    const inGameWeaponId = inGameWeapons[0].id;
     for (let actorId of $gameParty._actors) {
       const actor = $gameActors.actor(actorId);
 
       for (let gameItem of actor._equips) {
-        if (gameItem._dataClass === "weapon" && gameItem._itemId === inGameWeaponId) {
+        if (gameItem && gameItem._dataClass === "weapon" && gameItem._itemId === inGameWeaponId) {
           return true;
         }
       }
     }
-  } catch {
+  }
+  return false;
+}
+
+function updateInventoryWithNFTS_Essentia(nftList) {
+  const newItems = [];
+
+  // updating player inventory
+  for (let nft of nftList) {
+    if (isNFTInInventory_Essentia(nft.nftId)) {
+      continue;
+    }
+
+    if (isNFTEquipped_Essentia(nft.nftId)) {
+      continue;
+    }
+
+    // adding new item
+    $gameParty.gainMateria(new Game_Materia(nft.id), 1, false);
+    newItems.push(nft);
   }
 
+  return newItems;
+}
+
+function isNFTInInventory_Essentia(nftId) {
+  const inGameArmors = $dataArmors.filter(x => x && x.nftId === nftId);
+  if (inGameArmors.length > 0) {
+    const inGameArmorId = inGameArmors[0].id;
+    for (let materia of $gameParty._materias) {
+      if (materia && Number(materia._id) === inGameArmorId) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function isNFTEquipped_Essentia(nftId) {
+  const inGameArmors = $dataArmors.filter(x => x && x.nftId === nftId);
+  if (inGameArmors.length > 0) {
+    const inGameArmorId = inGameArmors[0].id;
+    for (let actorId of $gameParty._actors) {
+      const actor = $gameActors.actor(actorId);
+
+      for (let materiaSlot of actor._materiaSlots) {
+        for (let materia of materiaSlot.materias) {
+          if (materia && Number(materia._id) === inGameArmorId) {
+            return true;
+          }
+        }
+      }
+
+      for (let materiaSlot of actor._currentSlots) {
+        for (let materia of materiaSlot.materias) {
+          if (materia && Number(materia._id) === inGameArmorId) {
+            return true;
+          }
+        }
+      }
+    }
+  }
   return false;
 }
 
 function getAllUnequippedNFT() {
   const result = [];
   for (let nft of $ksmCachedNFT) {
-    if (!isNFTEquipped(nft.id)) {
-      result.push(nft);
+    switch (nft.collection) {
+      case WEAPONS_COLLECTION:
+        if (!isNFTEquipped_Weapon(nft.id)) {
+          result.push(nft);
+        }
+        break;
+      case ESSENTIA_COLLECTION:
+        if (!isNFTEquipped_Essentia(nft.id)) {
+          result.push(nft);
+        }
+        break;
+      default: throw new Error("getAllUnequippedNFT, unknown nft collection, id: " + collectionId);
+    }
+  }
+  return result;
+}
+
+function getAllUnequippedNFTForCollection(collectionId) {
+  const result = [];
+  for (let nft of $ksmCachedNFT) {
+    if (nft.collection === collectionId) {
+      switch (nft.collection) {
+        case WEAPONS_COLLECTION:
+          if (!isNFTEquipped_Weapon(nft.id)) {
+            result.push(nft);
+          }
+          break;
+        case ESSENTIA_COLLECTION:
+          if (!isNFTEquipped_Essentia(nft.id)) {
+            result.push(nft);
+          }
+          break;
+        default: throw new Error("getAllUnequippedNFT, unknown nft collection, id: " + collectionId);
+      }
     }
   }
   return result;
@@ -251,10 +426,10 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
   $ksmCachedNFTOnSale = (await getAllNFTOnSale());
 
   // updating database
-  const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
+  const nftItems = updateDatabaseWithNFTS_AutoCollections($ksmCachedNFT);
 
   // updating inventory
-  updateInventoryWithNFTS(nftItems);
+  updateInventoryWithNFTS_AutoCollections(nftItems);
 };
 
 const data_manager_load_game_alias = DataManager.loadGame;
@@ -277,7 +452,7 @@ DataManager.loadGame = async function(savefileId) {
       address: response.address,
       mnemonic: response.mnemonic
     };
-    
+
     ksmInfoFixed = true;
   }
 
@@ -289,7 +464,7 @@ DataManager.loadGame = async function(savefileId) {
   $ksmCachedNFTOnSale = (await getAllNFTOnSale());
 
   // updating database
-  const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
+  const nftItems = updateDatabaseWithNFTS_AutoCollections($ksmCachedNFT);
 
   // original loading
   const result = await data_manager_load_game_alias.call(this, savefileId);
@@ -300,7 +475,7 @@ DataManager.loadGame = async function(savefileId) {
   }
 
   // updating inventory
-  updateInventoryWithNFTS(nftItems);
+  updateInventoryWithNFTS_AutoCollections(nftItems);
 
   return result;
 };
@@ -344,10 +519,10 @@ async function UpdateNFTLoopBody() {
   $ksmCachedNFTOnSale = (await getAllNFTOnSale());
 
   // updating database
-  const nftItems = updateDatabaseWithNFTS($ksmCachedNFT);
+  const nftItems = updateDatabaseWithNFTS_AutoCollections($ksmCachedNFT);
 
   // updating inventory
-  const newItems = updateInventoryWithNFTS(nftItems);
+  const newItems = updateInventoryWithNFTS_AutoCollections(nftItems);
 
   OnNewNFTItem(newItems);
 }
@@ -1813,12 +1988,24 @@ Window_NFTShopBuy.prototype.itemAt = function(index) {
 
 Window_NFTShopBuy.prototype.itemMetadata = function() {
   const item = this.itemAt(this.index());
-  return item ? JSON.parse(item.metadata).properties.gameData.value : null;
+  if (!item) return null;
+  const metadata = JSON.parse(item.metadata);
+  if (!metadata.properties) return null;
+  const propGameDataValue = item ? metadata.properties.gameData.value : {};
+  if (!propGameDataValue.name) propGameDataValue.name = metadata.name || "";
+  if (!propGameDataValue.description) propGameDataValue.description = metadata.description || "";
+  return propGameDataValue;
 };
 
 Window_NFTShopBuy.prototype.itemMetadataAt = function(index) {
   const item = this.itemAt(index);
-  return item ? JSON.parse(item.metadata).properties.gameData.value : null;
+  if (!item) return null;
+  const metadata = JSON.parse(item.metadata);
+  if (!metadata.properties) return null;
+  const propGameDataValue = item ? metadata.properties.gameData.value : {};
+  if (!propGameDataValue.name) propGameDataValue.name = metadata.name || "";
+  if (!propGameDataValue.description) propGameDataValue.description = metadata.description || "";
+  return propGameDataValue;
 };
 
 Window_NFTShopBuy.prototype.isCurrentItemEnabled = function() {
@@ -1926,7 +2113,7 @@ Window_NFTShopSell.prototype.onNewNFTItem = async function(newNftItem) {
 };
 
 Window_NFTShopSell.prototype.refresh = async function() {
-  this._nftItems = getAllUnequippedNFT();
+  this._nftItems = getAllUnequippedNFTForCollection(collectionId);
   Window_Selectable.prototype.refresh.call(this);
   this.select(0);
 };
@@ -1945,22 +2132,24 @@ Window_NFTShopSell.prototype.itemAt = function(index) {
 
 Window_NFTShopSell.prototype.itemMetadata = function() {
   const item = this.itemAt(this.index());
-  try {
-    return item ? JSON.parse(item.metadata).properties.gameData.value : null;
-  }
-  catch {
-  }
-  return null;
+  if (!item) return null;
+  const metadata = JSON.parse(item.metadata);
+  if (!metadata.properties) return null;
+  const propGameDataValue = item ? metadata.properties.gameData.value : {};
+  if (!propGameDataValue.name) propGameDataValue.name = metadata.name || "";
+  if (!propGameDataValue.description) propGameDataValue.description = metadata.description || "";
+  return propGameDataValue;
 };
 
 Window_NFTShopSell.prototype.itemMetadataAt = function(index) {
   const item = this.itemAt(index);
-  try {
-  	return item ? JSON.parse(item.metadata).properties.gameData.value : null;
-  }
-  catch {
-  }
-  return null;
+  if (!item) return null;
+  const metadata = JSON.parse(item.metadata);
+  if (!metadata.properties) return null;
+  const propGameDataValue = item ? metadata.properties.gameData.value : {};
+  if (!propGameDataValue.name) propGameDataValue.name = metadata.name || "";
+  if (!propGameDataValue.description) propGameDataValue.description = metadata.description || "";
+  return propGameDataValue;
 };
 
 Window_NFTShopSell.prototype.isCurrentItemEnabled = function() {

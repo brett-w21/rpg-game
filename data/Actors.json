@@ -1,6 +1,6 @@
 [
 null,
-{"id":1,"battlerName":"1Battler I","characterIndex":0,"characterName":"$Hero","classId":4,"equips":[47,27,46,3,0],"faceIndex":0,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Reid","nickname":"","note":"<materia slots>\nEquip 1:\nEquip 2:\n</materia slots>","profile":""},
+{"id":1,"battlerName":"1Battler I","characterIndex":0,"characterName":"$Hero","classId":4,"equips":[0,27,46,3,0],"faceIndex":0,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Reid","nickname":"","note":"<materia slots>\nEquip 1:\nEquip 2:\n</materia slots>","profile":""},
 {"id":2,"battlerName":"Actor2_1","characterIndex":0,"characterName":"Actor2","classId":2,"equips":[1,0,0,9,0],"faceIndex":0,"faceName":"Actor2","traits":[],"initialLevel":10,"maxLevel":99,"name":"Old man","nickname":"","note":"","profile":""},
 {"id":3,"battlerName":"Actor1_3","characterIndex":2,"characterName":"Actor1","classId":5,"equips":[31,0,65,5,0],"faceIndex":2,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Gale","nickname":"","note":"","profile":""},
 {"id":4,"battlerName":"Rogue_Battler","characterIndex":3,"characterName":"$Rogue","classId":1,"equips":[31,0,0,0,0],"faceIndex":3,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Michelle","nickname":"","note":"<materia slots>\nEquip 1:\nEquip 2:\n</materia slots>","profile":""},

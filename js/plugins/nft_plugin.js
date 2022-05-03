@@ -104,7 +104,7 @@ function updateDatabaseWithNFTS_AutoCollections(nftList) {
   for (let collectionId of Object.keys(collections)) {
     result.push(...updateDatabaseWithNFTS(collections[collectionId], collectionId));
   }
-
+  
   return result;
 }
 
@@ -125,8 +125,11 @@ function updateDatabaseWithNFTS_Weapon(nftList) {
       gameItemValue.id += 51;
       gameItemValue.nftId = nft.id;
       gameItemValue.nftCollectionId = nft.collection;
+      gameItemValue.note = "<materia slots: 0:0>";
       $dataWeapons[gameItemValue.id] = gameItemValue;
       newItems.push(gameItemValue);
+      
+      VictorEngine.MateriaSystem.loadNotes1($dataWeapons[gameItemValue.id]);
     }
   }
   return newItems;
@@ -145,9 +148,9 @@ function updateDatabaseWithNFTS_Essentia(nftList) {
         description: metadata.description,
         etypeId: 2,
         traits: [{code:22,dataId:1,value:0}],
-        iconIndex: 0,
+        iconIndex: 336,
         name: metadata.name,
-        note: "<materia>type: support\nap: 10000, 30000, 60000, 120000\nprice: 1400000\npaired: all\nlimited</materia>",
+        note: "<materia>type: armor, weapon</materia>",
         params: [0,0,0,0,0,0,0,0],
         price: 0
       };

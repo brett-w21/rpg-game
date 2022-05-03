@@ -359,6 +359,7 @@ $ksmCachedNFT = [];
 $ksmCachedNFTOnSale = [];
 
 let isBuying = false;
+let isSelling = false;
 let collectionId = "";
 
 function KSMInfo() {
@@ -596,7 +597,7 @@ GlobalNewNFTItemCallbackReceiver.prototype.getLastNewNFTItem = function() {
 GlobalNewNFTItemCallbackReceiver.prototype.OnNewNFTItem = async function (newItem) {
   this._lastNewNFTItem = newItem;
 
-  while(isBuying) {
+  while (isBuying || isSelling) {
     await timeout(100);
   }
 
@@ -1084,7 +1085,14 @@ Scene_NFTShop.prototype.onBuyConfirmOk = async function () {
   SceneManager.push(Scene_Spinner);
   SceneManager._nextScene.setLoadingPrefix("Buying");
   let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
-  const result = await buyNft(signer, this._item.id, this._item.owner, this._item.forsale);
+  let result = false;
+  let error = "";
+  try {
+    result = await buyNft(signer, this._item.id, this._item.owner, this._item.forsale);
+  } catch (e) {
+    error = e.message;
+    result = false;
+  }
   await timeout(1000);
   if (result) {
     SceneManager._scene.setText("Purchase success");
@@ -1116,13 +1124,22 @@ Scene_NFTShop.prototype.onBuyConfirmCancel = function () {
 };
 
 Scene_NFTShop.prototype.onPriceInputOk = async function() {
+  isSelling = true;
+
   const item = this._item;
   const price = BigInt(this._priceEditWindow.price());
 
   SceneManager.push(Scene_Spinner);
   SceneManager._nextScene.setLoadingPrefix("Selling");
   let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
-  const result = await listNft(signer, item.id, price);
+  let result = false;
+  let error = "";
+  try {
+    result = await listNft(signer, item.id, price);
+  } catch (e) {
+    error = e.message;
+    result = false;
+  }
   await timeout(1000);
   if (result) {
     SceneManager._scene.setText("The item is for sale successfully");
@@ -1143,6 +1160,9 @@ Scene_NFTShop.prototype.onPriceInputOk = async function() {
   SceneManager._scene._commandWindow.updateInputData();
   SceneManager._scene._commandWindow.deactivate();
   SceneManager._scene._commandWindow.callOkHandler();
+
+  await timeout(5000);
+  isSelling = false;
 };
 
 Scene_NFTShop.prototype.onCancelNFTSellOk = async function () {
@@ -1151,7 +1171,14 @@ Scene_NFTShop.prototype.onCancelNFTSellOk = async function () {
   SceneManager.push(Scene_Spinner);
   SceneManager._nextScene.setLoadingPrefix("Cancelling");
   let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
-  const result = await listNft(signer, item.id, 0);
+  let result = false;
+  let error = "";
+  try {
+    result = await listNft(signer, item.id, 0);
+  } catch (e) {
+    error = e.message;
+    result = false;
+  }
   await timeout(1000);
   if (result) {
     SceneManager._scene.setText("The item has been successfully withdrawn from sale");
@@ -1543,7 +1570,7 @@ Window_CancelNFTSell.prototype.refresh = function () {
   this.drawText("Are you sure you want to withdraw the item from sale?", 0, this.height / 2 - 80, this.width, "center");
 };
 
-window_cancel_nft_sell_itemrect_alias = Window_Command.prototype.itemRect;
+const window_cancel_nft_sell_itemrect_alias = Window_Command.prototype.itemRect;
 Window_CancelNFTSell.prototype.itemRect = function(index) {
   let rectangle = window_cancel_nft_sell_itemrect_alias.call(this, index);
   rectangle.y += this.height / 2 - 30;
@@ -1992,6 +2019,7 @@ Window_NFTShopBuy.prototype.itemMetadata = function() {
   const metadata = JSON.parse(item.metadata);
   if (!metadata.properties) return null;
   const propGameDataValue = item ? metadata.properties.gameData.value : {};
+  if (!propGameDataValue.name) propGameDataValue.name = propGameDataValue.n || "";
   if (!propGameDataValue.name) propGameDataValue.name = metadata.name || "";
   if (!propGameDataValue.description) propGameDataValue.description = metadata.description || "";
   return propGameDataValue;
@@ -2003,6 +2031,7 @@ Window_NFTShopBuy.prototype.itemMetadataAt = function(index) {
   const metadata = JSON.parse(item.metadata);
   if (!metadata.properties) return null;
   const propGameDataValue = item ? metadata.properties.gameData.value : {};
+  if (!propGameDataValue.name) propGameDataValue.name = propGameDataValue.n || "";
   if (!propGameDataValue.name) propGameDataValue.name = metadata.name || "";
   if (!propGameDataValue.description) propGameDataValue.description = metadata.description || "";
   return propGameDataValue;
@@ -2079,7 +2108,7 @@ Window_NFTBuyConfirm.prototype.refresh = function () {
   this.drawText("Are you sure to buy this item?", 0, this.height / 2 - 80, this.width, "center");
 };
 
-window_nft_buy_confirm_itemrect_alias = Window_Command.prototype.itemRect;
+const window_nft_buy_confirm_itemrect_alias = Window_Command.prototype.itemRect;
 Window_NFTBuyConfirm.prototype.itemRect = function(index) {
   let rectangle = window_nft_buy_confirm_itemrect_alias.call(this, index);
   rectangle.y += this.height / 2 - 30;
@@ -2136,6 +2165,7 @@ Window_NFTShopSell.prototype.itemMetadata = function() {
   const metadata = JSON.parse(item.metadata);
   if (!metadata.properties) return null;
   const propGameDataValue = item ? metadata.properties.gameData.value : {};
+  if (!propGameDataValue.name) propGameDataValue.name = propGameDataValue.n || "";
   if (!propGameDataValue.name) propGameDataValue.name = metadata.name || "";
   if (!propGameDataValue.description) propGameDataValue.description = metadata.description || "";
   return propGameDataValue;
@@ -2147,6 +2177,7 @@ Window_NFTShopSell.prototype.itemMetadataAt = function(index) {
   const metadata = JSON.parse(item.metadata);
   if (!metadata.properties) return null;
   const propGameDataValue = item ? metadata.properties.gameData.value : {};
+  if (!propGameDataValue.name) propGameDataValue.name = propGameDataValue.n || "";
   if (!propGameDataValue.name) propGameDataValue.name = metadata.name || "";
   if (!propGameDataValue.description) propGameDataValue.description = metadata.description || "";
   return propGameDataValue;
@@ -2562,7 +2593,7 @@ Scene_Options.prototype.maxCommands = function() {
 
 // Window_Options
 
-window_options_make_command_list_alias = Window_Options.prototype.makeCommandList;
+const window_options_make_command_list_alias = Window_Options.prototype.makeCommandList;
 Window_Options.prototype.makeCommandList = function() {
   window_options_make_command_list_alias.call(this);
   this.addKSMOptions();
@@ -2573,7 +2604,7 @@ Window_Options.prototype.addKSMOptions = function() {
   this.addCommand("RMRK Endpoint", "rmrkEndpoint");
 };
 
-window_options_draw_item_alias = Window_Options.prototype.drawItem;
+const window_options_draw_item_alias = Window_Options.prototype.drawItem;
 Window_Options.prototype.drawItem = function(index) {
   switch (this.commandSymbol(index)) {
     case "ksmEndpoint":
@@ -2591,7 +2622,7 @@ Window_Options.prototype.drawItem = function(index) {
   }
 };
 
-window_options_process_ok_alias = Window_Options.prototype.processOk;
+const window_options_process_ok_alias = Window_Options.prototype.processOk;
 Window_Options.prototype.processOk = function() {
   switch (this.commandSymbol(this.index())) {
     case "ksmEndpoint":
@@ -2601,14 +2632,14 @@ Window_Options.prototype.processOk = function() {
       SceneManager.push(Scene_ChangeRMRKEndpoint);
       break;
     default:
-      window_options_draw_item_alias.call(this);
+      window_options_process_ok_alias.call(this);
       break;
   }
 };
 
 // Window_EquipItem
 
-window_equip_item_includes_alias = Window_EquipItem.prototype.includes;
+const window_equip_item_includes_alias = Window_EquipItem.prototype.includes;
 Window_EquipItem.prototype.includes = function(item) {
   if (item && item.nftId && $ksmCachedNFTOnSale.some(e => e.id === item.nftId)) {
     return false;

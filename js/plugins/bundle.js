@@ -75311,7 +75311,9 @@ window.initializeVeilOfTimeNft = async (wsProvider, veilOfTimeServerHttpApiAddre
   try {
     console.log('initializing');
     await (0, _utilCrypto.cryptoWaitReady)();
+    console.log('crypto ready');
     provider = new _api.WsProvider(wsProvider);
+    console.log('provider');
     ss58Format = ss58;
     api = await new _api.ApiPromise({
       provider
@@ -75457,7 +75459,7 @@ window.getMyNfts = address => {
   });
 };
 
-window.getNft = nftId => {
+const getNft = nftId => {
   return new Promise(res => {
     let xmlHttp = new XMLHttpRequest();
 
@@ -75469,6 +75471,32 @@ window.getNft = nftId => {
 
     xmlHttp.send(null);
   });
+};
+
+window.getNft = async nftId => {
+  let nft = JSON.parse(await getNft(nftId));
+  let equipSlots = [];
+
+  if (nft.hasOwnProperty('resources')) {
+    nft.resources.forEach(resource => {
+      if (resource.hasOwnProperty('slot')) {
+        resource.slot = resource.slot.replace(/'/g, '');
+        let baseArray = resource.slot.split('.');
+
+        if (baseArray.length === 2) {
+          let base = baseArray[0];
+          let slot = baseArray[1];
+          equipSlots.push({
+            base,
+            slot
+          });
+        }
+      }
+    });
+  }
+
+  nft.equipSlots = equipSlots;
+  return JSON.stringify(nft);
 };
 
 window.sendNft = async (sender, nftId, recipient) => {
@@ -75494,6 +75522,88 @@ window.sendNft = async (sender, nftId, recipient) => {
       });
     } catch (error) {
       console.error(`Error sending : ${error}`);
+      return rej(false);
+    }
+  });
+}; //equipSlot null to unequip, otherwise {base, slot}
+
+
+window.equipNft = async (sender, nftId, equipSlot) => {
+  return new Promise(async (res, rej) => {
+    try {
+      if (!initialized) {
+        console.error('Not Initialized');
+        return rej(false);
+      }
+
+      let remarks = [];
+      let baseSlot;
+
+      if (!equipSlot) {//Unequipping
+      } else {
+        //Equipping
+        if (!equipSlot.hasOwnProperty('base') || !equipSlot.hasOwnProperty('slot')) {
+          console.error('Invalid equipSlot! (Missing base or slot?)');
+          return rej(false);
+        }
+
+        const {
+          base,
+          slot
+        } = equipSlot;
+        baseSlot = `${base}.${slot}`;
+        /*
+                We need to check whether or not another nft is already equipped
+                in this slot. If so, batch an unequip RMRK
+        */
+
+        let thisNft = JSON.parse(await getNft(nftId));
+        let owner = thisNft.owner;
+        let nft = JSON.parse(await getNft(owner));
+
+        if (nft.hasOwnProperty('children')) {
+          const children = nft.children.filter(r => {
+            if (!r.hasOwnProperty('equipped')) {
+              return false;
+            }
+
+            const baseArray = r.equipped.split('.');
+
+            if (baseArray.length !== 2) {
+              return false;
+            }
+
+            let b = baseArray[0];
+            let s = baseArray[1];
+            return `${b}.${s}` === baseSlot;
+          });
+
+          if (children.length > 0) {
+            console.log(`Unequipping:`);
+          }
+
+          for (let child of children) {
+            console.log(`RMRK::EQUIP::2.0.0::${child.id}::`);
+            remarks.push(api.tx.system.remark(`RMRK::EQUIP::2.0.0::${child.id}::`));
+          }
+        }
+      }
+
+      console.log(`RMRK::EQUIP::2.0.0::${nftId}::${baseSlot}`);
+      remarks.push(api.tx.system.remark(`RMRK::EQUIP::2.0.0::${nftId}::${baseSlot}`));
+      const tx = api.tx.utility.batchAll(remarks);
+      await tx.signAndSend(sender, {
+        signer: sender.sign
+      }, async result => {
+        if (result.status.isInBlock) {
+          console.log(`pending...`);
+        } else if (result.status.isFinalized) {
+          console.log(result);
+          return res(true);
+        }
+      });
+    } catch (error) {
+      console.error(`Error Equipping: ${error}`);
       return rej(false);
     }
   });

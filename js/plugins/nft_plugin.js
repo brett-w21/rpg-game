@@ -136,21 +136,23 @@ function updateDatabaseWithNFTS_Weapon(nftList) {
 }
 
 function updateDatabaseWithNFTS_Essentia(nftList) {
+
   const newItems = [];
   for (let nft of nftList) {
     const metadata = JSON.parse(nft.metadata);
+    
     if (metadata.properties) {
-      const gameItemValue = metadata.properties.gameData.value;
+      const gameItemValue = metadata.properties.gameData.value.d;
 
       const essentiaData = {
-        id: 102 + gameItemValue.i,
+        id: gameItemValue.id,
         atypeId: 0,
         description: metadata.description,
         etypeId: 2,
-        traits: [{code:22,dataId:1,value:0}],
-        iconIndex: 336,
+        traits: gameItemValue.traits,
+        iconIndex: gameItemValue.iconIndex,
         name: metadata.name,
-        note: "<materia>type: armor, weapon</materia>",
+        note: "<materia>type: weapon</materia>",
         params: [0,0,0,0,0,0,0,0],
         price: 0
       };
@@ -431,6 +433,8 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
 
   // updating database
   const nftItems = updateDatabaseWithNFTS_AutoCollections($ksmCachedNFT);
+
+  //console.log($ksmInfo.address);
 
   // updating inventory
   updateInventoryWithNFTS_AutoCollections(nftItems);

@@ -119,18 +119,21 @@ function updateDatabaseWithNFTS(nftList, collectionId) {
 function updateDatabaseWithNFTS_Weapon(nftList) {
   const newItems = [];
   for (let nft of nftList) {
-    const metadata = JSON.parse(nft.metadata);
-    if (metadata.properties) {
-      const gameItemValue = metadata.properties.gameData.value;
-      gameItemValue.id += 51;
-      gameItemValue.nftId = nft.id;
-      gameItemValue.nftCollectionId = nft.collection;
-      gameItemValue.note = "<materia slots: 0:0>";
-      $dataWeapons[gameItemValue.id] = gameItemValue;
-      newItems.push(gameItemValue);
+    try {
+      const metadata = JSON.parse(nft.metadata);
+      if (metadata.properties) {
+        const gameItemValue = metadata.properties.gameData.value;
+        gameItemValue.id += 51;
+        gameItemValue.nftId = nft.id;
+        gameItemValue.nftCollectionId = nft.collection;
+        gameItemValue.note = "<materia slots: 0:0>";
+        $dataWeapons[gameItemValue.id] = gameItemValue;
+        newItems.push(gameItemValue);
       
-      VictorEngine.MateriaSystem.loadNotes1($dataWeapons[gameItemValue.id]);
+        VictorEngine.MateriaSystem.loadNotes1($dataWeapons[gameItemValue.id]);
+      }
     }
+    catch{}
   }
   return newItems;
 }
@@ -139,29 +142,32 @@ function updateDatabaseWithNFTS_Essentia(nftList) {
 
   const newItems = [];
   for (let nft of nftList) {
-    const metadata = JSON.parse(nft.metadata);
+  	try {
+      const metadata = JSON.parse(nft.metadata);
     
-    if (metadata.properties) {
-      const gameItemValue = metadata.properties.gameData.value.d;
+      if (metadata.properties) {
+        const gameItemValue = metadata.properties.gameData.value.d;
 
-      const essentiaData = {
-        id: gameItemValue.id,
-        atypeId: 0,
-        description: metadata.description,
-        etypeId: 2,
-        traits: gameItemValue.traits,
-        iconIndex: gameItemValue.iconIndex,
-        name: metadata.name,
-        note: "<materia>type: weapon</materia>",
-        params: [0,0,0,0,0,0,0,0],
-        price: 0
-      };
-      essentiaData.nftId = nft.id;
-      essentiaData.nftCollectionId = nft.collection;
+        const essentiaData = {
+          id: gameItemValue.id,
+          atypeId: 0,
+          description: metadata.description,
+          etypeId: 2,
+          traits: gameItemValue.traits,
+          iconIndex: gameItemValue.iconIndex,
+          name: metadata.name,
+          note: "<materia>type: weapon</materia>",
+          params: [0,0,0,0,0,0,0,0],
+          price: 0
+        };
+        essentiaData.nftId = nft.id;
+        essentiaData.nftCollectionId = nft.collection;
 
-      $dataArmors[essentiaData.id] = essentiaData;
-      newItems.push(essentiaData);
-    }
+        $dataArmors[essentiaData.id] = essentiaData;
+        newItems.push(essentiaData);
+      }
+  	}
+  	catch {}
   }
   VictorEngine.processNotetags($dataArmors, 5);
   return newItems;

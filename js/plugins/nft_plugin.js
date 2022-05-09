@@ -139,7 +139,6 @@ function updateDatabaseWithNFTS_Weapon(nftList) {
 }
 
 function updateDatabaseWithNFTS_Essentia(nftList) {
-
   const newItems = [];
   for (let nft of nftList) {
   	try {
@@ -380,6 +379,7 @@ function KSMInfo() {
 KSMInfo.prototype.initialize = function() {
   this.address = "";
   this.mnemonic = "";
+  this.password = "";
 };
 
 const data_manager_create_gameobjects_alias = DataManager.createGameObjects;
@@ -402,7 +402,7 @@ DataManager.extractSaveContents = function(contents) {
 };
 
 const data_manager_setup_newgame = DataManager.setupNewGame;
-DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
+DataManager.setupNewGame = async function(isCustom, ksmPhrase, password) {
   data_manager_setup_newgame.call(this);
 
   if (!isCustom) {
@@ -421,13 +421,15 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
     if (response.address) {
       $ksmInfo.address = response.address;
       $ksmInfo.mnemonic = this._editWindow.phrase();
+      $ksmInfo.password = "";
     }
   }
 
   if (!$ksmInfo || !$ksmInfo.address) {
-    const response = await getNewAddress();
+    const response = await getNewAddress(password);
     $ksmInfo.address = response.address;
     $ksmInfo.mnemonic = response.mnemonic;
+    $ksmInfo.password = password || "";
   }
 
   $ksmCachedBalance = (await getMyBalance($ksmInfo.address)).balance;
@@ -439,8 +441,6 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase) {
 
   // updating database
   const nftItems = updateDatabaseWithNFTS_AutoCollections($ksmCachedNFT);
-
-  //console.log($ksmInfo.address);
 
   // updating inventory
   updateInventoryWithNFTS_AutoCollections(nftItems);
@@ -464,7 +464,8 @@ DataManager.loadGame = async function(savefileId) {
     const response = await getNewAddress();
     ksmInfo = {
       address: response.address,
-      mnemonic: response.mnemonic
+      mnemonic: response.mnemonic,
+      password: ""
     };
 
     ksmInfoFixed = true;
@@ -1335,13 +1336,133 @@ Scene_SelectKSMAddress.prototype.createWindow = function() {
 };
 
 Scene_SelectKSMAddress.prototype.commandNewKSMAddress = async function () {
+  SceneManager.push(Scene_EncryptConfirm);
+};
+
+Scene_SelectKSMAddress.prototype.commandImportKSMAddress = function () {
+  SceneManager.push(Scene_NFTPhrase);
+};
+
+//-----------------------------------------------------------------------------
+// Scene_EncryptConfirm
+//
+
+function Scene_EncryptConfirm() {
+  this.initialize(...arguments);
+}
+
+Scene_EncryptConfirm.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_EncryptConfirm.prototype.constructor = Scene_EncryptConfirm;
+
+Scene_EncryptConfirm.prototype.initialize = function() {
+  Scene_MenuBase.prototype.initialize.call(this);
+};
+
+Scene_EncryptConfirm.prototype.create = function() {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_EncryptConfirm.prototype.createWindow = function() {
+  const width = 450;
+  const height = 170;
+  const rect = new Rectangle(Graphics.boxWidth / 2 - width / 2, Graphics.boxHeight - height - 125, width, height);
+  this._encryptConfirm = new Window_EncryptConfirm(rect);
+  this._encryptConfirm.setMessage("Do you want to add a password?");
+  this._encryptConfirm.setHandler("yes", this.commandYes.bind(this));
+  this._encryptConfirm.setHandler("cancel", this.commandNo.bind(this));
+  this.addWindow(this._encryptConfirm);
+};
+
+Scene_EncryptConfirm.prototype.commandYes = async function () {
+  SceneManager.push(Scene_EncryptEnter);
+};
+
+Scene_EncryptConfirm.prototype.commandNo = async function () {
   this.fadeOutAll();
   await DataManager.setupNewGame(true);
   SceneManager.goto(Scene_Map);
 };
 
-Scene_SelectKSMAddress.prototype.commandImportKSMAddress = function () {
-  SceneManager.push(Scene_NFTPhrase);
+//-----------------------------------------------------------------------------
+// Scene_EncryptEnter
+//
+
+function Scene_EncryptEnter() {
+  this.initialize(...arguments);
+}
+
+Scene_EncryptEnter.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_EncryptEnter.prototype.constructor = Scene_EncryptEnter;
+
+Scene_EncryptEnter.prototype.initialize = function() {
+  Scene_MenuBase.prototype.initialize.call(this);
+  this._maxLength = 32;
+};
+
+Scene_EncryptEnter.prototype.prepare = function(maxLength) {
+  this._maxLength = maxLength;
+};
+
+Scene_EncryptEnter.prototype.create = function() {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createEditWindow();
+  this.createInputWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_EncryptEnter.prototype.start = function() {
+  Scene_MenuBase.prototype.start.call(this);
+  this._editWindow.refresh();
+};
+
+Scene_EncryptEnter.prototype.createEditWindow = function() {
+  const rect = this.editWindowRect();
+  this._editWindow = new Window_EncryptEdit(rect);
+  this._editWindow.setup("", "", this._maxLength);
+  this.addWindow(this._editWindow);
+};
+
+Scene_EncryptEnter.prototype.editWindowRect = function() {
+  const inputWindowHeight = this.calcWindowHeight(9, true);
+  const padding = $gameSystem.windowPadding();
+  const ww = 600;
+  const wh = ImageManager.faceHeight + padding * 2;
+  const wx = (Graphics.boxWidth - ww) / 2;
+  const wy = (Graphics.boxHeight - (wh + inputWindowHeight + 8)) / 2;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_EncryptEnter.prototype.createInputWindow = function() {
+  const rect = this.inputWindowRect();
+  this._inputWindow = new Window_NameInput(rect);
+  this._inputWindow.isKSMInput = true;
+  this._inputWindow.setEditWindow(this._editWindow);
+  this._inputWindow.setHandler("ok", this.onInputOk.bind(this));
+  this.addWindow(this._inputWindow);
+};
+
+Scene_EncryptEnter.prototype.inputWindowRect = function() {
+  const wx = this._editWindow.x;
+  const wy = this._editWindow.y + this._editWindow.height + 8;
+  const ww = this._editWindow.width;
+  const wh = this.calcWindowHeight(9, true);
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_EncryptEnter.prototype.onInputOk = async function() {
+  this.fadeOutAll();
+  await DataManager.setupNewGame(true, "", this._editWindow.encryptPassword());
+  SceneManager.goto(Scene_Map);
 };
 
 //-----------------------------------------------------------------------------
@@ -2585,6 +2706,162 @@ Window_SelectNFTAddress.prototype.initialize = function (rect) {
 Window_SelectNFTAddress.prototype.makeCommandList = function () {
   this.addCommand("New KSM Address", "new_ksm_address", true);
   this.addCommand("Import KSM Address", "import_ksm_address", true);
+};
+
+//-----------------------------------------------------------------------------
+// Window_EncryptConfirm
+//
+
+function Window_EncryptConfirm() {
+  this.initialize(...arguments);
+}
+
+Window_EncryptConfirm.prototype = Object.create(Window_Command.prototype);
+Window_EncryptConfirm.prototype.constructor = Window_EncryptConfirm;
+
+Window_EncryptConfirm.prototype.initialize = function(rect) {
+  Window_Command.prototype.initialize.call(this, rect);
+};
+
+Window_EncryptConfirm.prototype.setMessage = function (message) {
+  this._message = message;
+  this.contents.clear();
+  this.refresh();
+
+  const messageParts = this._message.split("<br>");
+  for (let i = 0; i < messageParts.length; i++) {
+    const y = 5 + i * 30;
+    this.drawText(messageParts[i], 0, y, this.innerWidth, "center");
+  }
+};
+
+Window_EncryptConfirm.prototype.makeCommandList = function () {
+  this.addCommand("Yes", "yes");
+  this.addCommand("No", "cancel");
+};
+
+notreadydeck_itemrect_alias = Window_Command.prototype.itemRect;
+Window_EncryptConfirm.prototype.itemRect = function(index) {
+  let rectangle = notreadydeck_itemrect_alias.call(this, index);
+  rectangle.y += 65;
+  return rectangle;
+};
+
+//-----------------------------------------------------------------------------
+// Window_EncryptEdit
+//
+
+function Window_EncryptEdit() {
+  this.initialize(...arguments);
+}
+
+Window_EncryptEdit.prototype = Object.create(Window_StatusBase.prototype);
+Window_EncryptEdit.prototype.constructor = Window_EncryptEdit;
+
+Window_EncryptEdit.prototype.initialize = function(rect) {
+  Window_StatusBase.prototype.initialize.call(this, rect);
+  this._maxLength = 0;
+  this._encryptPassword = "";
+  this._index = 0;
+  this._defaultEncryptPassword = "";
+  this.deactivate();
+};
+
+Window_EncryptEdit.prototype.setup = function(currentPassword, defaultPassword, maxLength) {
+  this._maxLength = maxLength;
+  this._encryptPassword = currentPassword.slice(0, this._maxLength);
+  this._index = this._encryptPassword.length;
+  this._defaultEncryptPassword = defaultPassword;
+};
+
+Window_EncryptEdit.prototype.encryptPassword = function() {
+  return this._encryptPassword;
+};
+
+Window_EncryptEdit.prototype.restoreDefault = function() {
+  this._encryptPassword = this._defaultEncryptPassword;
+  this._index = this._encryptPassword.length;
+  this.refresh();
+  return this._encryptPassword.length > 0;
+};
+
+Window_EncryptEdit.prototype.add = function(ch) {
+  if (this._index < this._maxLength) {
+    this._encryptPassword += ch;
+    this._index++;
+    this.refresh();
+    return true;
+  } else {
+    return false;
+  }
+};
+
+Window_EncryptEdit.prototype.back = function() {
+  if (this._index > 0) {
+    this._index--;
+    this._encryptPassword = this._encryptPassword.slice(0, this._index);
+    this.refresh();
+    return true;
+  } else {
+    return false;
+  }
+};
+
+Window_EncryptEdit.prototype.charWidth = function() {
+  return this.textWidth("A");
+};
+
+Window_EncryptEdit.prototype.left = function() {
+  const endpointCenter = this.innerWidth / 2;
+  const endpointWidth = (this._maxLength + 1) * this.charWidth();
+  return Math.min(endpointCenter - endpointWidth / 2, this.innerWidth - endpointWidth);
+};
+
+Window_EncryptEdit.prototype.itemRect = function(index) {
+  const x = this.left() + index * this.charWidth();
+  const y = 54;
+  const width = this.charWidth();
+  const height = this.lineHeight();
+  return new Rectangle(x, y, width, height);
+};
+
+Window_EncryptEdit.prototype.underlineRect = function(index) {
+  const rect = this.itemRect(index);
+  rect.x++;
+  rect.y += rect.height - 4;
+  rect.width -= 2;
+  rect.height = 2;
+  return rect;
+};
+
+Window_EncryptEdit.prototype.underlineColor = function() {
+  return ColorManager.normalColor();
+};
+
+Window_EncryptEdit.prototype.drawUnderline = function(index) {
+  const rect = this.underlineRect(index);
+  const color = this.underlineColor();
+  this.contents.paintOpacity = 48;
+  this.contents.fillRect(rect.x, rect.y, rect.width, rect.height, color);
+  this.contents.paintOpacity = 255;
+};
+
+Window_EncryptEdit.prototype.drawChar = function(index) {
+  const rect = this.itemRect(index);
+  this.resetTextColor();
+  this.drawText(this._encryptPassword[index] || "", rect.x, rect.y);
+};
+
+Window_EncryptEdit.prototype.refresh = function() {
+  this.contents.clear();
+  for (let i = 0; i < this._maxLength; i++) {
+    this.drawUnderline(i);
+  }
+  for (let j = 0; j < this._encryptPassword.length; j++) {
+    this.drawChar(j);
+  }
+  const rect = this.itemRect(this._index);
+  this.setCursorRect(rect.x, rect.y, rect.width, rect.height);
 };
 
 // RMMZ Overrides

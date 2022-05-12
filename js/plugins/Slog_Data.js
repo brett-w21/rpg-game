@@ -96,9 +96,8 @@ DataManager._databaseFiles.push({ name: "$dataSlogAbilities", src: "SlogAbilitie
 const create_gameobjects_alias = DataManager.createGameObjects;
 DataManager.createGameObjects = function() {
   create_gameobjects_alias.call(this);
-  // temporary overridden by test data
-  //$gamePlayerSlogDeck = [];
-  //$gamePlayerSlogCollection = [];
+  $gamePlayerSlogDeck = [];
+  $gamePlayerSlogCollection = [];
 };
 
 

@@ -105,11 +105,16 @@ Scene_PlayerDeck.prototype.onPlayerCardsCommandCancel = function () {
 
 Scene_PlayerDeck.prototype.onPlayerCardCollectionOk = function () {
   const card = this._windowPlayerCardCollection._list[this._windowPlayerCardCollection.index()];
-  this._selectedCard = card;
-  this._selectedFrom = this._windowPlayerCardCollection;
 
-  this._windowCardActions.show();
-  this._windowCardActions.activate();
+  if (card) {
+    this._selectedCard = card;
+    this._selectedFrom = this._windowPlayerCardCollection;
+
+    this._windowCardActions.show();
+    this._windowCardActions.activate();
+  } else {
+    this._windowPlayerCardCollection.activate();
+  }
 };
 
 Scene_PlayerDeck.prototype.onPlayerCardCollectionCancel = function () {
@@ -119,11 +124,16 @@ Scene_PlayerDeck.prototype.onPlayerCardCollectionCancel = function () {
 
 Scene_PlayerDeck.prototype.onPlayerDeckOk = function () {
   const card = this._windowPlayerDeck._list[this._windowPlayerDeck.index()];
-  this._selectedCard = card;
-  this._selectedFrom = this._windowPlayerDeck;
 
-  this._windowCardActions.show();
-  this._windowCardActions.activate();
+  if (card) {
+    this._selectedCard = card;
+    this._selectedFrom = this._windowPlayerDeck;
+
+    this._windowCardActions.show();
+    this._windowCardActions.activate();
+  } else {
+    this._windowPlayerDeck.activate();
+  }
 };
 
 Scene_PlayerDeck.prototype.onPlayerDeckCancel = function () {
@@ -292,9 +302,6 @@ Scene_NotReadyDeck.prototype.onNotReadyDeckOpenDeck = async function () {
 
 Scene_NotReadyDeck.prototype.onNotReadyDeckCancel = function () {
   SceneManager.pop();
-  setTimeout(() => {
-    SceneManager.push(Scene_SlogGame);
-  },50);
 };
 
 //-----------------------------------------------------------------------------

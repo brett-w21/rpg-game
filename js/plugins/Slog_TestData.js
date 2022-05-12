@@ -1,7 +1,16 @@
+const test_data_data_manager_create_gameobjects_alias = DataManager.createGameObjects;
+DataManager.createGameObjects = function() {
+  test_data_data_manager_create_gameobjects_alias.call(this);
+  populateTestData();
+};
+
 const test_data_extract_save_contents_alias = DataManager.extractSaveContents;
 DataManager.extractSaveContents = function(contents) {
   test_data_extract_save_contents_alias.call(this, contents);
+  populateTestData();
+};
 
+function populateTestData() {
   $gamePlayerSlogCollection = [];
   $gamePlayerSlogCollection.push(
       {id: "bored_frog", quantity: 3},
@@ -97,4 +106,4 @@ DataManager.extractSaveContents = function(contents) {
       {id: "impenetrableFog", quantity: 5},
       {id: "clearWeather", quantity: 5},
   );
-};
+}

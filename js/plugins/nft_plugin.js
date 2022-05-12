@@ -816,7 +816,7 @@ Scene_NFTShop.prototype.createKSMAddressWindow = function() {
 };
 
 Scene_NFTShop.prototype.ksmAddressWindowRect = function() {
-  const ww = Graphics.boxWidth - this._cancelButton.width - 4;
+  const ww = Graphics.boxWidth - 100;
   const wh = 50;
   const wx = 0;
   const wy = 0;
@@ -2740,9 +2740,9 @@ Window_EncryptConfirm.prototype.makeCommandList = function () {
   this.addCommand("No", "cancel");
 };
 
-notreadydeck_itemrect_alias = Window_Command.prototype.itemRect;
+const encryptconfirm_itemrect_alias = Window_Command.prototype.itemRect;
 Window_EncryptConfirm.prototype.itemRect = function(index) {
-  let rectangle = notreadydeck_itemrect_alias.call(this, index);
+  let rectangle = encryptconfirm_itemrect_alias.call(this, index);
   rectangle.y += 65;
   return rectangle;
 };
@@ -3034,7 +3034,7 @@ Scene_Menu.prototype.createKSMAddressWindow = function() {
 };
 
 Scene_Menu.prototype.ksmAddressWindowRect = function() {
-  const ww = Graphics.boxWidth - this._cancelButton.width - 4;
+  const ww = Graphics.boxWidth - 100;
   const wh = 50;
   const wx = 0;
   const wy = 0;

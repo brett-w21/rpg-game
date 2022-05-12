@@ -13,5 +13,15 @@ var $plugins =
 {"name":"VE_MateriaSystem","status":true,"description":"v1.07 - Attach materias to actors for parameter bonus and skills.","parameters":{"Max Materia Number":"255","Max Slot Number":"6","Materia Display Type":"2","Materia Breeding":"false","Cursor High Priority":"true","== Materia Icons ==":"","Single Slot Icon":"320","Link Slot Left":"321","Link Slot Center":"322","Link Slot Right":"323","Materia Level Icon":"324","== Materia Vocab ==":"","Materia Menu Name":"Essentia","Materia Ap Name":"AP","Materia Master Text":"Master","Ap Received Text":"%1 AP received!","Next Level Text":"To next level","Ability List Text":"Ability List","Param List Text":"Equip Effect","Equiped Materia Text":"Equiped","= Victory Aftermatch =":"","Aftermath Text":"AP Earned","Aftermath Format":"+%1\\c[4]%2\\","Aftermath AP Earned":"AP Earned in Battle\r\n\r\n=============================================================================="}},
 {"name":"GALV_LayerGraphicsMZ","status":true,"description":"(v.1.2) Create graphic layers for parallax mapping, fog, etc. View documentation for plugin commands.","parameters":{"fixPosition":"true"}},
 {"name":"bundle","status":true,"description":"","parameters":{}},
-{"name":"nft_plugin","status":true,"description":"","parameters":{}}
+{"name":"nft_plugin","status":true,"description":"","parameters":{}},
+{"name":"Slog_Extensions","status":true,"description":"","parameters":{}},
+{"name":"Slog_AI","status":true,"description":"","parameters":{}},
+{"name":"Slog_CardViewFactory","status":true,"description":"","parameters":{}},
+{"name":"Slog_Core","status":true,"description":"","parameters":{}},
+{"name":"Slog_Data","status":true,"description":"","parameters":{}},
+{"name":"Slog_Game","status":true,"description":"","parameters":{}},
+{"name":"Slog_Scenes","status":true,"description":"","parameters":{}},
+{"name":"Slog_Sprites","status":true,"description":"","parameters":{}},
+{"name":"Slog_Windows","status":true,"description":"","parameters":{}},
+{"name":"Slog_TestData","status":true,"description":"","parameters":{}}
 ];

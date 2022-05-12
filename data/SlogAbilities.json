@@ -1,0 +1,72 @@
+[
+  {
+    "id": "medic",
+    "title": "Medic",
+    "desc": "Choose one card from your DISCARD pile<br> and play it instantly (no HEROES or SPECIAL cards)."
+  },
+  {
+    "id": "muster",
+    "title": "Muster",
+    "desc": "Find any cards with the same name in<br> your deck (or hand) and play them instantly."
+  },
+  {
+    "id": "mardroeme",
+    "title": "Mardroeme",
+    "desc": "Triggers transformation of all Berserker cards on the same row."
+  },
+  {
+    "id": "commandersHorn",
+    "title": "Commander's Horn",
+    "desc": "Doubles the strength of all unit cards in<br> the row in which it is played. Limited to 1 per row."
+  },
+  {
+    "id": "spy",
+    "title": "Spy",
+    "desc": "Place on your opponent's battlefield and<br> draw 2 cards from your deck."
+  },
+  {
+    "id": "bitingFrost",
+    "title": "Biting Frost",
+    "desc": "Sets the strength of all Close Combat cards<br> on the battlefield to 1 for both players."
+  },
+  {
+    "id": "impenetrableFog",
+    "title": "Impenetrable Fog",
+    "desc": "Sets the strength of all Ranged cards on<br> the battlefield to 1 for both players."
+  },
+  {
+    "id": "clearWeather",
+    "title": "Clear Weather",
+    "desc": "Removes all weather effects from the battlefield.<br> This card is discarded after it is played."
+  },
+  {
+    "id": "agile",
+    "title": "Agile",
+    "desc": "Allows you to place this card on one of<br> two different lines on the battlefield."
+  },
+  {
+    "id": "moraleBoost",
+    "title": "Morale Boost",
+    "desc": "Adds +1 to all units in the row (excluding itself)."
+  },
+  {
+    "id": "scorch",
+    "title": "Scorch",
+    "desc": "Kills the strongest card(s) on the battlefield.<br> This card is discarded after it is played."
+  },
+  {
+    "id": "berserker",
+    "title": "Berserker",
+    "desc": "Transforms into a bear when Mardroeme card is on its row."
+  },
+  {
+    "id": "tightBond",
+    "title": "Tight Bond",
+    "desc": "Place next to a card with the same name <br>to double the strength of both cards."
+  },
+  {
+    "id": "decoy",
+    "title": "Decoy",
+    "desc": "Swap with a card on the battlefield to return<br> it to your hand."
+  }
+]

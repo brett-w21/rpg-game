@@ -75553,13 +75553,15 @@ window.equipNft = async (sender, nftId, equipSlot) => {
         } = equipSlot;
         baseSlot = `${base}.${slot}`;
         /*
-                We need to check whether or not another nft is already equipped
+                We need to check whether another nft is already equipped
                 in this slot. If so, batch an unequip RMRK
         */
 
         let thisNft = JSON.parse(await getNft(nftId));
-        let owner = thisNft.owner;
-        let nft = JSON.parse(await getNft(owner));
+        let owner = thisNft.owner; //Get Current Parent of this Nft
+
+        let nft = JSON.parse(await getNft(owner) //Get Owner Nft
+        );
 
         if (nft.hasOwnProperty('children')) {
           const children = nft.children.filter(r => {
@@ -75583,6 +75585,7 @@ window.equipNft = async (sender, nftId, equipSlot) => {
           }
 
           for (let child of children) {
+            //Unequip Transactions
             console.log(`RMRK::EQUIP::2.0.0::${child.id}::`);
             remarks.push(api.tx.system.remark(`RMRK::EQUIP::2.0.0::${child.id}::`));
           }
@@ -75676,6 +75679,11 @@ window.getMyBalance = async address => {
 
     while (balanceString >= BigInt(1000000)) {
       balanceString /= 1000000;
+      phraseIndex++;
+    }
+
+    while (balanceString >= BigInt(1000)) {
+      balanceString /= 1000;
       phraseIndex++;
     }
 

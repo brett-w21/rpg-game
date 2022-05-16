@@ -23,5 +23,5 @@ var $plugins =
 {"name":"Slog_Scenes","status":true,"description":"","parameters":{}},
 {"name":"Slog_Sprites","status":true,"description":"","parameters":{}},
 {"name":"Slog_Windows","status":true,"description":"","parameters":{}},
-{"name":"Slog_TestData","status":true,"description":"","parameters":{}}
+{"name":"Slog_TestData","status":false,"description":"","parameters":{}}
 ];

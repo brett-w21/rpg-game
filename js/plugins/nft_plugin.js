@@ -1936,30 +1936,35 @@ Window_PriceInput.prototype.isCursorMovable = function() {
 };
 
 Window_PriceInput.prototype.cursorDown = function(wrap) {
-  if (this._index < 10 || wrap) {
-    this._index = (this._index + this.maxCols()) % 12;
+  if (this._index < this.maxCols()) {
+    this._index = this._index + this.maxCols();
+  }
+  else if (this._index < 9) {
+  	this._index = 10;
+  }
+  else if (this._index < 10) {
+    this._index = 11;
   }
 };
 
 Window_PriceInput.prototype.cursorUp = function(wrap) {
-  if (this._index >= this.maxCols() || wrap) {
-    this._index = (this._index + 10) % 12;
+  if (this._index >= 10) {
+    this._index = this._index - 2;
+  }
+  else if (this._index >= this.maxCols()) {
+  	this._index = this._index - this.maxCols();
   }
 };
 
 Window_PriceInput.prototype.cursorRight = function(wrap) {
-  if (this._index % this.maxCols() < 9) {
+  if (this._index < 11) {
     this._index++;
-  } else if (wrap) {
-    this._index -= this.maxCols() - 1;
   }
 };
 
 Window_PriceInput.prototype.cursorLeft = function(wrap) {
-  if (this._index % this.maxCols() > 0) {
+  if (this._index > 0) {
     this._index--;
-  } else if (wrap) {
-    this._index += this.maxCols() - 1;
   }
 };
 
@@ -2295,6 +2300,9 @@ Window_NFTShopSell.prototype.itemAt = function(index) {
 
 Window_NFTShopSell.prototype.itemMetadata = function() {
   const item = this.itemAt(this.index());
+  
+  console.log(item);
+  
   if (!item) return null;
   const metadata = JSON.parse(item.metadata);
   if (!metadata.properties) return null;
@@ -2307,6 +2315,9 @@ Window_NFTShopSell.prototype.itemMetadata = function() {
 
 Window_NFTShopSell.prototype.itemMetadataAt = function(index) {
   const item = this.itemAt(index);
+  
+  console.log(item);
+  
   if (!item) return null;
   const metadata = JSON.parse(item.metadata);
   if (!metadata.properties) return null;

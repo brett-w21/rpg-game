@@ -1,0 +1,445 @@
+[
+  {
+    "id": "castleGuard",
+    "sprite": "cards/castleGuard",
+    "power": 0,
+    "type": "cc",
+    "class": "special",
+    "abilities": [ "commandersHorn" ],
+    "title": "Castle Guard",
+    "desc": "Description"
+  },
+  {
+    "id": "bitingFrost",
+    "sprite": "cards/bitingFrost",
+    "power": 0,
+    "type": "cc",
+    "class": "special",
+    "abilities": [ "bitingFrost" ],
+    "title": "Biting Frost",
+    "desc": "Description"
+  },
+  {
+    "id": "impenetrableFog",
+    "sprite": "cards/impenetrableFog",
+    "power": 0,
+    "type": "r",
+    "class": "special",
+    "abilities": [ "impenetrableFog" ],
+    "title": "Impenetrable Fog",
+    "desc": "Description"
+  },
+  {
+    "id": "clearWeather",
+    "sprite": "cards/clearWeather",
+    "power": 0,
+    "type": "cc/r",
+    "class": "special",
+    "abilities": [ "clearWeather" ],
+    "title": "Clear Weather",
+    "desc": "Description"
+  },
+
+
+
+  {
+    "id": "bored_frog",
+    "sprite": "cards/bored_frog",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Bored Frog",
+    "desc": "Description"
+  },
+  {
+    "id": "ducks",
+    "sprite": "cards/ducks",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Ducks",
+    "desc": "Description"
+  },
+  {
+    "id": "kanaria_bird_1",
+    "sprite": "cards/kanaria_bird_1",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Kanaria Bird I",
+    "desc": "Description"
+  },
+  {
+    "id": "mantis",
+    "sprite": "cards/mantis",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Mantis",
+    "desc": "Description"
+  },
+  {
+    "id": "sailor",
+    "sprite": "cards/sailor",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Sailor",
+    "desc": "Description"
+  },
+  {
+    "id": "scorpion",
+    "sprite": "cards/scorpion",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Scorpion",
+    "desc": "Description"
+  },
+  {
+    "id": "trader",
+    "sprite": "cards/trader",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Trader",
+    "desc": "Description"
+  },
+  {
+    "id": "blind_cleric",
+    "sprite": "cards/blind_cleric",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Blind Cleric",
+    "desc": "Description"
+  },
+  {
+    "id": "cactus",
+    "sprite": "cards/cactus",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "Cactus",
+    "desc": "Description"
+  },
+  {
+    "id": "dark_cleric",
+    "sprite": "cards/dark_cleric",
+    "power": 4,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "Dark Cleric",
+    "desc": "Description"
+  },
+  {
+    "id": "dark_elf",
+    "sprite": "cards/dark_elf",
+    "power": 1,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Dark Elf",
+    "desc": "Description"
+  },
+  {
+    "id": "dark_owlman",
+    "sprite": "cards/dark_owlman",
+    "power": 5,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "Dark Owlman",
+    "desc": "Description"
+  },
+  {
+    "id": "eel",
+    "sprite": "cards/eel",
+    "power": 4,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "Eel",
+    "desc": "Description"
+  },
+  {
+    "id": "florist",
+    "sprite": "cards/florist",
+    "power": 4,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Florist",
+    "desc": "Description"
+  },
+  {
+    "id": "giant_bird",
+    "sprite": "cards/giant_bird",
+    "power": 4,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Giant_bird",
+    "desc": "Description"
+  },
+  {
+    "id": "giant_snake",
+    "sprite": "cards/giant_snake",
+    "power": 8,
+    "type": "cc/r",
+    "class": "troops",
+    "abilities": [ "moraleBoost" ],
+    "title": "Giant Snake",
+    "desc": "Description"
+  },
+  {
+    "id": "haunted_trunk",
+    "sprite": "cards/haunted_trunk",
+    "power": 4,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "Haunted Trunk",
+    "desc": "Description"
+  },
+  {
+    "id": "hermit",
+    "sprite": "cards/hermit",
+    "power": 1,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Hermit",
+    "desc": "Description"
+  },
+  {
+  "id": "homeless_kid",
+  "sprite": "cards/homeless_kid",
+  "power": 1,
+  "type": "cc",
+  "class": "troops",
+  "abilities": [ ],
+  "title": "Homeless Kid",
+  "desc": "Description"
+  },
+  {
+    "id": "hunter",
+    "sprite": "cards/hunter",
+    "power": 1,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Hunter",
+    "desc": "Description"
+  },
+  {
+    "id": "knight",
+    "sprite": "cards/knight",
+    "power": 5,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Knight",
+    "desc": "Description"
+  },
+  {
+    "id": "knight_skeleton",
+    "sprite": "cards/knight_skeleton",
+    "power": 5,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Knight Skeleton",
+    "desc": "Description"
+  },
+  {
+    "id": "merchant",
+    "sprite": "cards/merchant",
+    "power": 5,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Merchant",
+    "desc": "Description"
+  },
+  {
+    "id": "mimic",
+    "sprite": "cards/mimic",
+    "power": 2,
+    "type": "cc/r",
+    "class": "troops",
+    "abilities": [ "agile" ],
+    "title": "Mimic",
+    "desc": "Description"
+  },
+  {
+    "id": "mushrooms",
+    "sprite": "cards/mushrooms",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "Mushrooms",
+    "desc": "Description"
+  },
+  {
+    "id": "mutant_shark",
+    "sprite": "cards/mutant_shark",
+    "power": 5,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Mutant Shark",
+    "desc": "Description"
+  },
+  {
+    "id": "nun",
+    "sprite": "cards/nun",
+    "power": 6,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Pigman",
+    "desc": "Nun"
+  },
+  {
+    "id": "pigman",
+    "sprite": "cards/pigman",
+    "power": 6,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Pigman",
+    "desc": "Description"
+  },
+  {
+    "id": "ranger",
+    "sprite": "cards/ranger",
+    "power": 6,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Ranger",
+    "desc": "Description"
+  },
+  {
+    "id": "reaper",
+    "sprite": "cards/reaper",
+    "power": 7,
+    "type": "r",
+    "class": "troops",
+    "abilities": [ "scorch" ],
+    "title": "Reaper",
+    "desc": "Description"
+  },
+  {
+    "id": "rogue",
+    "sprite": "cards/rogue",
+    "power": 1,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Rogue",
+    "desc": "Description"
+  },
+  {
+    "id": "sandworm",
+    "sprite": "cards/sandworm",
+    "power": 1,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Sandworm",
+    "desc": "Description"
+  },
+  {
+    "id": "skeleton",
+    "sprite": "cards/skeleton",
+    "power": 2,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "Skeleton",
+    "desc": "Description"
+  },
+  {
+    "id": "skull_king",
+    "sprite": "cards/skull_king",
+    "power": 10,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Skull King",
+    "desc": "Description"
+  },
+  {
+    "id": "slime",
+    "sprite": "cards/slime",
+    "power": 4,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "Slime",
+    "desc": "Description"
+  },
+  {
+    "id": "spider",
+    "sprite": "cards/spider",
+    "power": 5,
+    "type": "r",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Spider",
+    "desc": "Description"
+  },
+  {
+    "id": "stray_dog",
+    "sprite": "cards/stray_dog",
+    "power": 5,
+    "type": "r",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Stray Dog",
+    "desc": "Description"
+  },
+  {
+    "id": "tentacle_shell",
+    "sprite": "cards/tentacle_shell",
+    "power": 5,
+    "type": "r",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Tentacle Shell",
+    "desc": "Description"
+  },
+  {
+    "id": "wild_dog",
+    "sprite": "cards/wild_dog",
+    "power": 1,
+    "type": "cc",
+    "class": "troops",
+    "abilities": [ ],
+    "title": "Wild Dog",
+    "desc": "Description"
+  },
+  {
+    "id": "npc1",
+    "sprite": "cards/npc1",
+    "power": 2,
+    "type": "r",
+    "class": "troops",
+    "abilities": [ "muster" ],
+    "title": "NPC 1",
+    "desc": "Description"
+  }
+]

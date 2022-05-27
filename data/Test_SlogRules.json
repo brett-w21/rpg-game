@@ -1,0 +1,6 @@
+{
+  "minCardsInDeck": 22,
+  "minTroopCardsInDeck": 13,
+  "startHandCardsCount": 6,
+  "countNewCardsAfterRound": 2
+}

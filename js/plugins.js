@@ -24,5 +24,7 @@ var $plugins =
 {"name":"Slog_Scenes","status":true,"description":"","parameters":{}},
 {"name":"Slog_Sprites","status":true,"description":"","parameters":{}},
 {"name":"Slog_Windows","status":true,"description":"","parameters":{}},
-{"name":"Slog_TestData","status":false,"description":"","parameters":{}}
+{"name":"Slog_TestData","status":false,"description":"","parameters":{}},
+{"name":"MOG_CharParticles","status":true,"description":"(v1.0) Adiciona o sistema de partículas nos characters.","parameters":{}},
+{"name":"MOG_Weather_EX","status":true,"description":"(v1.4) Adiciona novos efeitos de climas.","parameters":{"Battle Weather":"true"}}
 ];

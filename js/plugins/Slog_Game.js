@@ -91,12 +91,12 @@ SlogGame_GameManager.prototype.update = function() {
 SlogGame_GameManager.prototype.onCardFight = async function(isAutomatic, playedCard) {
   this._windowSlogGame.updateProfileInfos();
 
-  for (let abilityInstance of playedCard.abilityInstances) {
-    const cardPlayResult = await abilityInstance.onPlayed(this.state === SlogGameState_MyTurn, isAutomatic, this);
-    if (cardPlayResult === false) {
-      return false;
-    }
-  }
+  // for (let abilityInstance of playedCard.abilityInstances) {
+  //   const cardPlayResult = await abilityInstance.onPlayed(this.state === SlogGameState_MyTurn, isAutomatic, this);
+  //   if (cardPlayResult === false) {
+  //     return false;
+  //   }
+  // }
   for (let activePlayedCard of this.getActivePlayedCards()) {
     for (let abilityInstance of activePlayedCard.abilityInstances) {
       await abilityInstance.onAnyCardPlayed(playedCard, this);
@@ -511,13 +511,13 @@ SlogGame_GameManager.prototype.getNeighbourCards = function(card) {
 };
 
 SlogGame_GameManager.prototype.getPossibleFieldsForCard = function(card, currentState) {
-  if (card.isHaveAbility("spy")) {
-    return this.getRelativeOpponentFieldsByType(card.type, card.isHaveAbility("commandersHorn"), currentState);
-  }
-  if (card.isHaveAbility("decoy")) {
-    return this.getRelativeMyFieldsByType(card.type, card.isHaveAbility("commandersHorn"), currentState).filter(x => x.getChilds().length > 0);
-  }
-  return this.getRelativeMyFieldsByType(card.type, card.isHaveAbility("commandersHorn"), currentState);
+  // if (card.isHaveAbility("spy")) {
+  //   return this.getRelativeOpponentFieldsByType(card.type, card.isHaveAbility("commandersHorn"), currentState);
+  // }
+  // if (card.isHaveAbility("decoy")) {
+  //   return this.getRelativeMyFieldsByType(card.type, card.isHaveAbility("commandersHorn"), currentState).filter(x => x.getChilds().length > 0);
+  // }
+  return this.getRelativeMyFieldsByType(card.type, card.isAutomatic, currentState);
 };
 
 SlogGame_GameManager.prototype.getRelativeMyFieldsByType = function(type, inSlots, currentState) {
@@ -562,15 +562,15 @@ SlogGame_GameManager.prototype.getAllFieldsByType = function(type, inSlots) {
     if (this.opponentField1Slot.canAddChild()) fields.push(this.opponentField1Slot);
     if (this.opponentField2Slot.canAddChild()) fields.push(this.opponentField2Slot);
   } else {
-    if (type.contains("cc")) {
+    //if (type.contains("cc")) {
       if (this.myField1.canAddChild()) fields.push(this.myField1);
       if (this.opponentField1.canAddChild()) fields.push(this.opponentField1);
+    //}
+    //if (type.contains("r")) {
+    //  if (this.myField2.canAddChild()) fields.push(this.myField2);
+    //  if (this.opponentField2.canAddChild()) fields.push(this.opponentField2);
     }
-    if (type.contains("r")) {
-      if (this.myField2.canAddChild()) fields.push(this.myField2);
-      if (this.opponentField2.canAddChild()) fields.push(this.opponentField2);
-    }
-  }
+  
   return fields;
 };
 
@@ -1095,13 +1095,13 @@ SlogGame_GameCardAbility_CommandersHorn.prototype.onPlayed = async function (byP
   const field = fieldSlot.field;
   const fieldCards = field.getChilds();
 
-  for (let card of fieldCards) {
-    if (card.hasEffect(SlogGame_GameCardEffect_CommandersHorn.name)) {
-      return;
-    }
+  // for (let card of fieldCards) {
+  //   if (card.hasEffect(SlogGame_GameCardEffect_CommandersHorn.name)) {
+  //     return;
+  //   }
 
-    card.addEffect(this.uid, new SlogGame_GameCardEffect_CommandersHorn());
-  }
+  //   card.addEffect(this.uid, new SlogGame_GameCardEffect_CommandersHorn());
+  // }
 };
 
 SlogGame_GameCardAbility_CommandersHorn.prototype.onAnyCardPlayed = async function (card, gameManager) {

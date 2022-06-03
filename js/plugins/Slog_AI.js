@@ -106,7 +106,7 @@ Slog_AI.stepClearWeatherCards = async function(gameManager) {
   if (gameManager.isFrostWeatherActive() && // if frost weather active
       !Slog_AI.isThereSenseToFrostWeather(gameManager) && // if we have more power loss than opponent
       gameManager.relativeMyHandCards(gameManager.state).getChilds().some(x => x.isHaveAbility("clearWeather"))) { // if we have clearWeather card
-    const clearWeatherCard = gameManager.find(x => x.isHaveAbility("clearWeather"));
+        const clearWeatherCard = Array.isArray(gameManager) ? gameManager.find(x => x.isHaveAbility("clearWeather")) : "clearWeather";
     const fieldsForCard = gameManager.getPossibleFieldsForCard(clearWeatherCard, gameManager.state);
     if (fieldsForCard.includes(gameManager.relativeMyField1(gameManager.state))) { // if we can play clearWeather card into field1 (melee)
       await gameManager.playCard(clearWeatherCard, gameManager.relativeMyField1(gameManager.state), false, true);
@@ -117,7 +117,7 @@ Slog_AI.stepClearWeatherCards = async function(gameManager) {
   if (gameManager.isFogWeatherActive() && // if fog weather active
       !Slog_AI.isThereSenseToFogWeather(gameManager) && // if we have more power loss than opponent
       gameManager.relativeMyHandCards(gameManager.state).getChilds().some(x => x.isHaveAbility("clearWeather"))) { // if we have clearWeather card
-    const clearWeatherCard = gameManager.find(x => x.isHaveAbility("clearWeather"));
+    const clearWeatherCard = Array.isArray(gameManager) ? gameManager.find(x => x.isHaveAbility("clearWeather")) : "clearWeather";
     const fieldsForCard = gameManager.getPossibleFieldsForCard(clearWeatherCard, gameManager.state);
     if (fieldsForCard.includes(gameManager.relativeMyField2(gameManager.state))) { // if we can play clearWeather card into field2 (range)
       await gameManager.playCard(clearWeatherCard, gameManager.relativeMyField2(gameManager.state), false, true);
@@ -132,7 +132,7 @@ Slog_AI.stepPlayWeatherCards = async function(gameManager) {
   if (gameManager.isFrostWeatherActive() && // if frost weather inactive
       Slog_AI.isThereSenseToFrostWeather(gameManager) && // if we have less power loss than opponent
       gameManager.relativeMyHandCards(gameManager.state).getChilds().some(x => x.isHaveAbility("bitingFrost"))) { // if we have frostWeather card
-    const frostWeatherCard = gameManager.find(x => x.isHaveAbility("bitingFrost"));
+    const frostWeatherCard = Array.isArray(gameManager) ? gameManager.find(x => x.isHaveAbility("bitingFrost")) : "bitingFrost";
     const fieldsForCard = gameManager.getPossibleFieldsForCard(frostWeatherCard, gameManager.state);
     if (fieldsForCard.includes(gameManager.relativeOpponentField1(gameManager.state))) { // if we can play frostWeather card into opponent field1 (melee)
       await gameManager.playCard(frostWeatherCard, gameManager.relativeOpponentField1(gameManager.state), false, true);
@@ -143,7 +143,7 @@ Slog_AI.stepPlayWeatherCards = async function(gameManager) {
   if (gameManager.isFogWeatherActive() && // if fog weather inactive
       !Slog_AI.isThereSenseToFogWeather(gameManager) && // if we have less power loss than opponent
       gameManager.relativeMyHandCards(gameManager.state).getChilds().some(x => x.isHaveAbility("impenetrableFog"))) { // if we have fogWeather card
-    const fogWeatherCard = gameManager.find(x => x.isHaveAbility("impenetrableFog"));
+    const fogWeatherCard = Array.isArray(gameManager) ? gameManager.find(x => x.isHaveAbility("impenetrableFog")) : "impenetrableFog";
     const fieldsForCard = gameManager.getPossibleFieldsForCard(fogWeatherCard, gameManager.state);
     if (fieldsForCard.includes(gameManager.relativeOpponentField2(gameManager.state))) { // if we can play fogWeather card into opponent field2 (range)
       await gameManager.playCard(fogWeatherCard, gameManager.relativeOpponentField2(gameManager.state), false, true);

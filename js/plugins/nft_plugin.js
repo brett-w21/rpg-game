@@ -27,21 +27,21 @@ function KSMEndpoints() {
   this.initialize(...arguments);
 }
 
-KSMEndpoints.prototype.initialize = function() {
+KSMEndpoints.prototype.initialize = function () {
   this.ksmEndpoint = "ws://143.198.116.85:9944";
   this.rmrkEndpoint = "http://143.198.116.85:3000";
 };
 
-StorageManager.saveKSMEndpoints = function() {
+StorageManager.saveKSMEndpoints = function () {
   return this.objectToJson($ksmEndpoints)
-      .then(json => this.jsonToZip(json))
-      .then(zip => this.saveZip("ksmEndpoints", zip));
+    .then(json => this.jsonToZip(json))
+    .then(zip => this.saveZip("ksmEndpoints", zip));
 };
 
-StorageManager.loadKSMEndpoints = function() {
+StorageManager.loadKSMEndpoints = function () {
   return this.loadZip("ksmEndpoints")
-      .then(zip => this.zipToJson(zip))
-      .then(json => this.jsonToObject(json));
+    .then(zip => this.zipToJson(zip))
+    .then(json => this.jsonToObject(json));
 };
 
 let initialized = false;
@@ -104,7 +104,7 @@ function updateDatabaseWithNFTS_AutoCollections(nftList) {
   for (let collectionId of Object.keys(collections)) {
     result.push(...updateDatabaseWithNFTS(collections[collectionId], collectionId));
   }
-  
+
   return result;
 }
 
@@ -129,11 +129,11 @@ function updateDatabaseWithNFTS_Weapon(nftList) {
         gameItemValue.note = "<materia slots: 0:0>";
         $dataWeapons[gameItemValue.id] = gameItemValue;
         newItems.push(gameItemValue);
-      
+
         VictorEngine.MateriaSystem.loadNotes1($dataWeapons[gameItemValue.id]);
       }
     }
-    catch{}
+    catch { }
   }
   return newItems;
 }
@@ -141,9 +141,9 @@ function updateDatabaseWithNFTS_Weapon(nftList) {
 function updateDatabaseWithNFTS_Essentia(nftList) {
   const newItems = [];
   for (let nft of nftList) {
-  	try {
+    try {
       const metadata = JSON.parse(nft.metadata);
-    
+
       if (metadata.properties) {
         const gameItemValue = metadata.properties.gameData.value.d;
 
@@ -156,7 +156,7 @@ function updateDatabaseWithNFTS_Essentia(nftList) {
           iconIndex: gameItemValue.iconIndex,
           name: metadata.name,
           note: "<materia>type: weapon</materia>",
-          params: [0,0,0,0,0,0,0,0],
+          params: [0, 0, 0, 0, 0, 0, 0, 0],
           price: 0
         };
         essentiaData.nftId = nft.id;
@@ -165,8 +165,8 @@ function updateDatabaseWithNFTS_Essentia(nftList) {
         $dataArmors[essentiaData.id] = essentiaData;
         newItems.push(essentiaData);
       }
-  	}
-  	catch {}
+    }
+    catch { }
   }
   VictorEngine.processNotetags($dataArmors, 5);
   return newItems;
@@ -376,33 +376,33 @@ function KSMInfo() {
   this.initialize(...arguments);
 }
 
-KSMInfo.prototype.initialize = function() {
+KSMInfo.prototype.initialize = function () {
   this.address = "";
   this.mnemonic = "";
   this.password = "";
 };
 
 const data_manager_create_gameobjects_alias = DataManager.createGameObjects;
-DataManager.createGameObjects = function() {
+DataManager.createGameObjects = function () {
   data_manager_create_gameobjects_alias.call(this);
   $ksmInfo = new KSMInfo();
 };
 
 const data_manager_make_save_contents_alias = DataManager.makeSaveContents;
-DataManager.makeSaveContents = function() {
+DataManager.makeSaveContents = function () {
   const contents = data_manager_make_save_contents_alias.call(this);
   contents.ksmInfo = $ksmInfo;
   return contents;
 };
 
 const data_manager_extract_save_contents_alias = DataManager.extractSaveContents;
-DataManager.extractSaveContents = function(contents) {
+DataManager.extractSaveContents = function (contents) {
   data_manager_extract_save_contents_alias.call(this, contents);
   $ksmInfo = contents.ksmInfo;
 };
 
 const data_manager_setup_newgame = DataManager.setupNewGame;
-DataManager.setupNewGame = async function(isCustom, ksmPhrase, password) {
+DataManager.setupNewGame = async function (isCustom, ksmPhrase, password) {
   data_manager_setup_newgame.call(this);
 
   if (!isCustom) {
@@ -447,7 +447,7 @@ DataManager.setupNewGame = async function(isCustom, ksmPhrase, password) {
 };
 
 const data_manager_load_game_alias = DataManager.loadGame;
-DataManager.loadGame = async function(savefileId) {
+DataManager.loadGame = async function (savefileId) {
   if (initializationFailed) {
     return (await data_manager_load_game_alias.call(this, savefileId));
   }
@@ -604,7 +604,7 @@ function GlobalNewNFTItemCallbackReceiver() {
 
 }
 
-GlobalNewNFTItemCallbackReceiver.prototype.getLastNewNFTItem = function() {
+GlobalNewNFTItemCallbackReceiver.prototype.getLastNewNFTItem = function () {
   return this._lastNewNFTItem;
 }
 
@@ -635,16 +635,16 @@ function Scene_ChangeKSMEndpoint() {
 Scene_ChangeKSMEndpoint.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_ChangeKSMEndpoint.prototype.constructor = Scene_ChangeKSMEndpoint;
 
-Scene_ChangeKSMEndpoint.prototype.initialize = function() {
+Scene_ChangeKSMEndpoint.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
   this._maxLength = 32;
 };
 
-Scene_ChangeKSMEndpoint.prototype.prepare = function(maxLength) {
+Scene_ChangeKSMEndpoint.prototype.prepare = function (maxLength) {
   this._maxLength = maxLength;
 };
 
-Scene_ChangeKSMEndpoint.prototype.create = function() {
+Scene_ChangeKSMEndpoint.prototype.create = function () {
   Scene_MenuBase.prototype.create.call(this);
 
   this.createEditWindow();
@@ -655,19 +655,19 @@ Scene_ChangeKSMEndpoint.prototype.create = function() {
   });
 };
 
-Scene_ChangeKSMEndpoint.prototype.start = function() {
+Scene_ChangeKSMEndpoint.prototype.start = function () {
   Scene_MenuBase.prototype.start.call(this);
   this._editWindow.refresh();
 };
 
-Scene_ChangeKSMEndpoint.prototype.createEditWindow = function() {
+Scene_ChangeKSMEndpoint.prototype.createEditWindow = function () {
   const rect = this.editWindowRect();
   this._editWindow = new Window_EndpointEdit(rect);
-  this._editWindow.setup($ksmEndpoints.ksmEndpoint,"ws://143.198.116.85:9944", this._maxLength);
+  this._editWindow.setup($ksmEndpoints.ksmEndpoint, "ws://143.198.116.85:9944", this._maxLength);
   this.addWindow(this._editWindow);
 };
 
-Scene_ChangeKSMEndpoint.prototype.editWindowRect = function() {
+Scene_ChangeKSMEndpoint.prototype.editWindowRect = function () {
   const inputWindowHeight = this.calcWindowHeight(9, true);
   const padding = $gameSystem.windowPadding();
   const ww = 600;
@@ -677,7 +677,7 @@ Scene_ChangeKSMEndpoint.prototype.editWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_ChangeKSMEndpoint.prototype.createInputWindow = function() {
+Scene_ChangeKSMEndpoint.prototype.createInputWindow = function () {
   const rect = this.inputWindowRect();
   this._inputWindow = new Window_NameInput(rect);
   this._inputWindow.isKSMInput = true;
@@ -686,7 +686,7 @@ Scene_ChangeKSMEndpoint.prototype.createInputWindow = function() {
   this.addWindow(this._inputWindow);
 };
 
-Scene_ChangeKSMEndpoint.prototype.inputWindowRect = function() {
+Scene_ChangeKSMEndpoint.prototype.inputWindowRect = function () {
   const wx = this._editWindow.x;
   const wy = this._editWindow.y + this._editWindow.height + 8;
   const ww = this._editWindow.width;
@@ -694,7 +694,7 @@ Scene_ChangeKSMEndpoint.prototype.inputWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_ChangeKSMEndpoint.prototype.onInputOk = async function() {
+Scene_ChangeKSMEndpoint.prototype.onInputOk = async function () {
   $ksmEndpoints.ksmEndpoint = this._editWindow.endpoint();
   StorageManager.saveKSMEndpoints();
   SceneManager.pop();
@@ -711,16 +711,16 @@ function Scene_ChangeRMRKEndpoint() {
 Scene_ChangeRMRKEndpoint.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_ChangeRMRKEndpoint.prototype.constructor = Scene_ChangeRMRKEndpoint;
 
-Scene_ChangeRMRKEndpoint.prototype.initialize = function() {
+Scene_ChangeRMRKEndpoint.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
   this._maxLength = 32;
 };
 
-Scene_ChangeRMRKEndpoint.prototype.prepare = function(maxLength) {
+Scene_ChangeRMRKEndpoint.prototype.prepare = function (maxLength) {
   this._maxLength = maxLength;
 };
 
-Scene_ChangeRMRKEndpoint.prototype.create = function() {
+Scene_ChangeRMRKEndpoint.prototype.create = function () {
   Scene_MenuBase.prototype.create.call(this);
 
   this.createEditWindow();
@@ -731,19 +731,19 @@ Scene_ChangeRMRKEndpoint.prototype.create = function() {
   });
 };
 
-Scene_ChangeRMRKEndpoint.prototype.start = function() {
+Scene_ChangeRMRKEndpoint.prototype.start = function () {
   Scene_MenuBase.prototype.start.call(this);
   this._editWindow.refresh();
 };
 
-Scene_ChangeRMRKEndpoint.prototype.createEditWindow = function() {
+Scene_ChangeRMRKEndpoint.prototype.createEditWindow = function () {
   const rect = this.editWindowRect();
   this._editWindow = new Window_EndpointEdit(rect);
   this._editWindow.setup($ksmEndpoints.rmrkEndpoint, "http://143.198.116.85:3000", this._maxLength);
   this.addWindow(this._editWindow);
 };
 
-Scene_ChangeRMRKEndpoint.prototype.editWindowRect = function() {
+Scene_ChangeRMRKEndpoint.prototype.editWindowRect = function () {
   const inputWindowHeight = this.calcWindowHeight(9, true);
   const padding = $gameSystem.windowPadding();
   const ww = 600;
@@ -753,7 +753,7 @@ Scene_ChangeRMRKEndpoint.prototype.editWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_ChangeRMRKEndpoint.prototype.createInputWindow = function() {
+Scene_ChangeRMRKEndpoint.prototype.createInputWindow = function () {
   const rect = this.inputWindowRect();
   this._inputWindow = new Window_NameInput(rect);
   this._inputWindow.isKSMInput = true;
@@ -762,7 +762,7 @@ Scene_ChangeRMRKEndpoint.prototype.createInputWindow = function() {
   this.addWindow(this._inputWindow);
 };
 
-Scene_ChangeRMRKEndpoint.prototype.inputWindowRect = function() {
+Scene_ChangeRMRKEndpoint.prototype.inputWindowRect = function () {
   const wx = this._editWindow.x;
   const wy = this._editWindow.y + this._editWindow.height + 8;
   const ww = this._editWindow.width;
@@ -770,7 +770,7 @@ Scene_ChangeRMRKEndpoint.prototype.inputWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_ChangeRMRKEndpoint.prototype.onInputOk = async function() {
+Scene_ChangeRMRKEndpoint.prototype.onInputOk = async function () {
   $ksmEndpoints.rmrkEndpoint = this._editWindow.endpoint();
   StorageManager.saveKSMEndpoints();
   SceneManager.pop();
@@ -788,11 +788,11 @@ function Scene_NFTShop() {
 Scene_NFTShop.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_NFTShop.prototype.constructor = Scene_NFTShop;
 
-Scene_NFTShop.prototype.initialize = function() {
+Scene_NFTShop.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
 };
 
-Scene_NFTShop.prototype.create = function() {
+Scene_NFTShop.prototype.create = function () {
   Scene_MenuBase.prototype.create.call(this);
   this.createHelpWindow();
   this.createKSMAddressWindow();
@@ -809,13 +809,13 @@ Scene_NFTShop.prototype.create = function() {
   this.createCancelNFTSellWindow();
 };
 
-Scene_NFTShop.prototype.createKSMAddressWindow = function() {
+Scene_NFTShop.prototype.createKSMAddressWindow = function () {
   const rect = this.ksmAddressWindowRect();
   this._ksmAddressWindow = new Window_KSMAddress(rect);
   this.addWindow(this._ksmAddressWindow);
 };
 
-Scene_NFTShop.prototype.ksmAddressWindowRect = function() {
+Scene_NFTShop.prototype.ksmAddressWindowRect = function () {
   const ww = Graphics.boxWidth - 100;
   const wh = 50;
   const wx = 0;
@@ -823,14 +823,14 @@ Scene_NFTShop.prototype.ksmAddressWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createKSMBalanceWindow = function() {
+Scene_NFTShop.prototype.createKSMBalanceWindow = function () {
   const rect = this.ksmBalanceWindowRect();
   this._ksmBalanceWindow = new Window_KSMBalance(rect);
   this._ksmBalanceWindow.open();
   this.addWindow(this._ksmBalanceWindow);
 };
 
-Scene_NFTShop.prototype.ksmBalanceWindowRect = function() {
+Scene_NFTShop.prototype.ksmBalanceWindowRect = function () {
   const ww = this.mainCommandWidth();
   const wh = this.calcWindowHeight(1, true);
   const wx = Graphics.boxWidth - ww;
@@ -838,7 +838,7 @@ Scene_NFTShop.prototype.ksmBalanceWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createCommandWindow = function() {
+Scene_NFTShop.prototype.createCommandWindow = function () {
   const rect = this.commandWindowRect();
   this._commandWindow = new Window_ShopCommand(rect);
   this._commandWindow.setPurchaseOnly(this._purchaseOnly);
@@ -849,7 +849,7 @@ Scene_NFTShop.prototype.createCommandWindow = function() {
   this.addWindow(this._commandWindow);
 };
 
-Scene_NFTShop.prototype.commandWindowRect = function() {
+Scene_NFTShop.prototype.commandWindowRect = function () {
   const wx = 0;
   const wy = this.mainAreaTop();
   const ww = this._ksmBalanceWindow.x;
@@ -857,13 +857,13 @@ Scene_NFTShop.prototype.commandWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createDummyWindow = function() {
+Scene_NFTShop.prototype.createDummyWindow = function () {
   const rect = this.dummyWindowRect();
   this._dummyWindow = new Window_Base(rect);
   this.addWindow(this._dummyWindow);
 };
 
-Scene_NFTShop.prototype.dummyWindowRect = function() {
+Scene_NFTShop.prototype.dummyWindowRect = function () {
   const wx = 0;
   const wy = this._commandWindow.y + this._commandWindow.height;
   const ww = Graphics.boxWidth;
@@ -871,14 +871,14 @@ Scene_NFTShop.prototype.dummyWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createStatusWindow = function() {
+Scene_NFTShop.prototype.createStatusWindow = function () {
   const rect = this.statusWindowRect();
   this._statusWindow = new Window_NFTShopStatus(rect);
   this._statusWindow.hide();
   this.addWindow(this._statusWindow);
 };
 
-Scene_NFTShop.prototype.statusWindowRect = function() {
+Scene_NFTShop.prototype.statusWindowRect = function () {
   const ww = this.statusWidth();
   const wh = this._dummyWindow.height;
   const wx = Graphics.boxWidth - ww;
@@ -886,7 +886,7 @@ Scene_NFTShop.prototype.statusWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createBuyWindow = function() {
+Scene_NFTShop.prototype.createBuyWindow = function () {
   const rect = this.buyWindowRect();
   this._buyWindow = new Window_NFTShopBuy(rect);
   this._buyWindow.setHelpWindow(this._helpWindow);
@@ -897,7 +897,7 @@ Scene_NFTShop.prototype.createBuyWindow = function() {
   this.addWindow(this._buyWindow);
 };
 
-Scene_NFTShop.prototype.buyWindowRect = function() {
+Scene_NFTShop.prototype.buyWindowRect = function () {
   const wx = 0;
   const wy = this._dummyWindow.y;
   const ww = Graphics.boxWidth - this.statusWidth();
@@ -905,7 +905,7 @@ Scene_NFTShop.prototype.buyWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createSellWindow = function() {
+Scene_NFTShop.prototype.createSellWindow = function () {
   const rect = this.sellWindowRect();
   this._sellWindow = new Window_NFTShopSell(rect);
   this._sellWindow.setHelpWindow(this._helpWindow);
@@ -916,7 +916,7 @@ Scene_NFTShop.prototype.createSellWindow = function() {
   this.addWindow(this._sellWindow);
 };
 
-Scene_NFTShop.prototype.sellWindowRect = function() {
+Scene_NFTShop.prototype.sellWindowRect = function () {
   const wx = 0;
   const wy = this._dummyWindow.y;
   const ww = Graphics.boxWidth;
@@ -924,7 +924,7 @@ Scene_NFTShop.prototype.sellWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createPriceInputWindow = function() {
+Scene_NFTShop.prototype.createPriceInputWindow = function () {
   const rect = this.priceInputWindowRect();
   this._priceInputWindow = new Window_PriceInput(rect);
   this._priceInputWindow.hide();
@@ -933,7 +933,7 @@ Scene_NFTShop.prototype.createPriceInputWindow = function() {
   this.addWindow(this._priceInputWindow);
 };
 
-Scene_NFTShop.prototype.priceInputWindowRect = function() {
+Scene_NFTShop.prototype.priceInputWindowRect = function () {
   const wx = 0;
   const wy = this._dummyWindow.y + this._priceEditWindow.height;
   const ww = Graphics.boxWidth;
@@ -941,7 +941,7 @@ Scene_NFTShop.prototype.priceInputWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createPriceEditWindow = function() {
+Scene_NFTShop.prototype.createPriceEditWindow = function () {
   const rect = this.priceEditWindowRect();
   this._priceEditWindow = new Window_PriceEdit(rect);
   this._priceEditWindow.hide();
@@ -949,7 +949,7 @@ Scene_NFTShop.prototype.createPriceEditWindow = function() {
   this.addWindow(this._priceEditWindow);
 };
 
-Scene_NFTShop.prototype.priceEditWindowRect = function() {
+Scene_NFTShop.prototype.priceEditWindowRect = function () {
   const wx = 0;
   const wy = this._dummyWindow.y;
   const ww = Graphics.boxWidth;
@@ -957,7 +957,7 @@ Scene_NFTShop.prototype.priceEditWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createCancelNFTSellWindow = function() {
+Scene_NFTShop.prototype.createCancelNFTSellWindow = function () {
   const rect = this.cancelNFTSellWindowRect();
   this._cancelNFTSellWindow = new Window_CancelNFTSell(rect);
   this._cancelNFTSellWindow.setHandler("ok", this.onCancelNFTSellOk.bind(this));
@@ -966,7 +966,7 @@ Scene_NFTShop.prototype.createCancelNFTSellWindow = function() {
   this.addWindow(this._cancelNFTSellWindow);
 };
 
-Scene_NFTShop.prototype.cancelNFTSellWindowRect = function() {
+Scene_NFTShop.prototype.cancelNFTSellWindowRect = function () {
   const wx = 0;
   const wy = this._dummyWindow.y;
   const ww = Graphics.boxWidth;
@@ -974,7 +974,7 @@ Scene_NFTShop.prototype.cancelNFTSellWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createCategoryWindow = function() {
+Scene_NFTShop.prototype.createCategoryWindow = function () {
   const rect = this.categoryWindowRect();
   this._categoryWindow = new Window_ItemCategory(rect);
   this._categoryWindow.setHelpWindow(this._helpWindow);
@@ -985,7 +985,7 @@ Scene_NFTShop.prototype.createCategoryWindow = function() {
   this.addWindow(this._categoryWindow);
 };
 
-Scene_NFTShop.prototype.categoryWindowRect = function() {
+Scene_NFTShop.prototype.categoryWindowRect = function () {
   const wx = 0;
   const wy = this._dummyWindow.y;
   const ww = Graphics.boxWidth;
@@ -993,7 +993,7 @@ Scene_NFTShop.prototype.categoryWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.createBuyConfirmWindow = function() {
+Scene_NFTShop.prototype.createBuyConfirmWindow = function () {
   const rect = this.buyConfirmWindowRect();
   this._buyConfirmWindow = new Window_NFTBuyConfirm(rect);
   this._buyConfirmWindow.hide();
@@ -1002,7 +1002,7 @@ Scene_NFTShop.prototype.createBuyConfirmWindow = function() {
   this.addWindow(this._buyConfirmWindow);
 };
 
-Scene_NFTShop.prototype.buyConfirmWindowRect = function() {
+Scene_NFTShop.prototype.buyConfirmWindowRect = function () {
   const wx = 0;
   const wy = this._dummyWindow.y;
   const ww = Graphics.boxWidth - this.statusWidth();
@@ -1010,17 +1010,17 @@ Scene_NFTShop.prototype.buyConfirmWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTShop.prototype.statusWidth = function() {
+Scene_NFTShop.prototype.statusWidth = function () {
   return 352;
 };
 
-Scene_NFTShop.prototype.activateBuyWindow = function() {
+Scene_NFTShop.prototype.activateBuyWindow = function () {
   this._buyWindow.show();
   this._buyWindow.activate();
   this._statusWindow.show();
 };
 
-Scene_NFTShop.prototype.activateSellWindow = function() {
+Scene_NFTShop.prototype.activateSellWindow = function () {
   if (this._categoryWindow.needsSelection()) {
     //this._categoryWindow.show();
   }
@@ -1030,24 +1030,24 @@ Scene_NFTShop.prototype.activateSellWindow = function() {
   this._statusWindow.hide();
 };
 
-Scene_NFTShop.prototype.commandBuy = function() {
+Scene_NFTShop.prototype.commandBuy = function () {
   this._dummyWindow.hide();
   this.activateBuyWindow();
 };
 
-Scene_NFTShop.prototype.commandSell = function() {
+Scene_NFTShop.prototype.commandSell = function () {
   this._dummyWindow.hide();
   this.activateSellWindow();
 };
 
-Scene_NFTShop.prototype.onBuyOk = function() {
+Scene_NFTShop.prototype.onBuyOk = function () {
   this._item = this._buyWindow.item();
   this._buyWindow.hide();
   this._buyConfirmWindow.show();
   this._buyConfirmWindow.activate();
 };
 
-Scene_NFTShop.prototype.onBuyCancel = function() {
+Scene_NFTShop.prototype.onBuyCancel = function () {
   this._commandWindow.activate();
   this._dummyWindow.show();
   this._buyWindow.hide();
@@ -1056,23 +1056,28 @@ Scene_NFTShop.prototype.onBuyCancel = function() {
   this._helpWindow.clear();
 };
 
-Scene_NFTShop.prototype.onSellOk = function() {
+Scene_NFTShop.prototype.onSellOk = function () {
   this._item = this._sellWindow.item();
   this._sellWindow.hide();
 
-  if ($ksmCachedNFTOnSale.some(e => e.id === this._item.id)) {
-    this._cancelNFTSellWindow.show();
-    this._cancelNFTSellWindow.activate();
-  } else {
-    this._helpWindow.setText("Please enter the price of the item being sold");
-    this._priceInputWindow.show();
-    this._priceInputWindow.activate();
-    this._priceEditWindow.show();
-    this._priceEditWindow.clear();
+  if (id == null) {
+    print("Id value not found");
+  }
+  else {
+    if ($ksmCachedNFTOnSale.some(e => e.id === this._item.id)) {
+      this._cancelNFTSellWindow.show();
+      this._cancelNFTSellWindow.activate();
+    } else {
+      this._helpWindow.setText("Please enter the price of the item being sold");
+      this._priceInputWindow.show();
+      this._priceInputWindow.activate();
+      this._priceEditWindow.show();
+      this._priceEditWindow.clear();
+    }
   }
 };
 
-Scene_NFTShop.prototype.onSellCancel = function() {
+Scene_NFTShop.prototype.onSellCancel = function () {
   this._commandWindow.activate();
   this._dummyWindow.show();
   this._sellWindow.hide();
@@ -1081,12 +1086,12 @@ Scene_NFTShop.prototype.onSellCancel = function() {
   this._helpWindow.clear();
 };
 
-Scene_NFTShop.prototype.onCategoryOk = function() {
+Scene_NFTShop.prototype.onCategoryOk = function () {
   this.activateSellWindow();
   this._sellWindow.select(0);
 };
 
-Scene_NFTShop.prototype.onCategoryCancel = function() {
+Scene_NFTShop.prototype.onCategoryCancel = function () {
   this._commandWindow.activate();
   this._dummyWindow.show();
   this._categoryWindow.hide();
@@ -1137,7 +1142,7 @@ Scene_NFTShop.prototype.onBuyConfirmCancel = function () {
   this._buyWindow.activate();
 };
 
-Scene_NFTShop.prototype.onPriceInputOk = async function() {
+Scene_NFTShop.prototype.onPriceInputOk = async function () {
   isSelling = true;
 
   const item = this._item;
@@ -1233,7 +1238,7 @@ function Scene_Spinner() {
 Scene_Spinner.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_Spinner.prototype.constructor = Scene_Spinner;
 
-Scene_Spinner.prototype.create = function() {
+Scene_Spinner.prototype.create = function () {
   Scene_Base.prototype.create.call(this);
   this.createBackground();
   this.updateActor();
@@ -1241,7 +1246,7 @@ Scene_Spinner.prototype.create = function() {
   this.createWindow();
 };
 
-Scene_Spinner.prototype.createWindow = function() {
+Scene_Spinner.prototype.createWindow = function () {
   const width = Graphics.boxWidth;
   const height = Graphics.boxHeight;
   const rect = new Rectangle(Graphics.boxWidth / 2 - width / 2, Graphics.boxHeight / 2 - height / 2, width, height);
@@ -1251,14 +1256,14 @@ Scene_Spinner.prototype.createWindow = function() {
   this.addWindow(this._windowSpinner);
 };
 
-Scene_Spinner.prototype.setLoadingPrefix = function(loadingPrefix) {
+Scene_Spinner.prototype.setLoadingPrefix = function (loadingPrefix) {
   this._loadingPrefix = loadingPrefix;
   if (this._windowSpinner) {
     this._windowSpinner._loadingPrefix = loadingPrefix;
   }
 };
 
-Scene_Spinner.prototype.setText = function(text) {
+Scene_Spinner.prototype.setText = function (text) {
   this._text = text;
   if (this._windowSpinner) {
     this._windowSpinner._text = text;
@@ -1276,11 +1281,11 @@ function Scene_NFTNotification() {
 Scene_NFTNotification.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_NFTNotification.prototype.constructor = Scene_NFTNotification;
 
-Scene_NFTNotification.prototype.initialize = function() {
+Scene_NFTNotification.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
 };
 
-Scene_NFTNotification.prototype.create = function() {
+Scene_NFTNotification.prototype.create = function () {
   Scene_MenuBase.prototype.create.call(this);
 
   this.createWindow();
@@ -1290,7 +1295,7 @@ Scene_NFTNotification.prototype.create = function() {
   });
 };
 
-Scene_NFTNotification.prototype.createWindow = function() {
+Scene_NFTNotification.prototype.createWindow = function () {
   const width = 700;
   const height = 200;
   const rect = new Rectangle(Graphics.boxWidth / 2 - width / 2, Graphics.boxHeight / 2 - height / 2, width, height);
@@ -1310,11 +1315,11 @@ function Scene_SelectKSMAddress() {
 Scene_SelectKSMAddress.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_SelectKSMAddress.prototype.constructor = Scene_SelectKSMAddress;
 
-Scene_SelectKSMAddress.prototype.initialize = function() {
+Scene_SelectKSMAddress.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
 };
 
-Scene_SelectKSMAddress.prototype.create = function() {
+Scene_SelectKSMAddress.prototype.create = function () {
   Scene_MenuBase.prototype.create.call(this);
 
   this.createWindow();
@@ -1324,7 +1329,7 @@ Scene_SelectKSMAddress.prototype.create = function() {
   });
 };
 
-Scene_SelectKSMAddress.prototype.createWindow = function() {
+Scene_SelectKSMAddress.prototype.createWindow = function () {
   const width = 300;
   const height = 115;
   const rect = new Rectangle(Graphics.boxWidth / 2 - width / 2, Graphics.boxHeight - height - 125, width, height);
@@ -1354,11 +1359,11 @@ function Scene_EncryptConfirm() {
 Scene_EncryptConfirm.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_EncryptConfirm.prototype.constructor = Scene_EncryptConfirm;
 
-Scene_EncryptConfirm.prototype.initialize = function() {
+Scene_EncryptConfirm.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
 };
 
-Scene_EncryptConfirm.prototype.create = function() {
+Scene_EncryptConfirm.prototype.create = function () {
   Scene_MenuBase.prototype.create.call(this);
 
   this.createWindow();
@@ -1368,7 +1373,7 @@ Scene_EncryptConfirm.prototype.create = function() {
   });
 };
 
-Scene_EncryptConfirm.prototype.createWindow = function() {
+Scene_EncryptConfirm.prototype.createWindow = function () {
   const width = 450;
   const height = 170;
   const rect = new Rectangle(Graphics.boxWidth / 2 - width / 2, Graphics.boxHeight - height - 125, width, height);
@@ -1400,16 +1405,16 @@ function Scene_EncryptEnter() {
 Scene_EncryptEnter.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_EncryptEnter.prototype.constructor = Scene_EncryptEnter;
 
-Scene_EncryptEnter.prototype.initialize = function() {
+Scene_EncryptEnter.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
   this._maxLength = 32;
 };
 
-Scene_EncryptEnter.prototype.prepare = function(maxLength) {
+Scene_EncryptEnter.prototype.prepare = function (maxLength) {
   this._maxLength = maxLength;
 };
 
-Scene_EncryptEnter.prototype.create = function() {
+Scene_EncryptEnter.prototype.create = function () {
   Scene_MenuBase.prototype.create.call(this);
 
   this.createEditWindow();
@@ -1420,19 +1425,19 @@ Scene_EncryptEnter.prototype.create = function() {
   });
 };
 
-Scene_EncryptEnter.prototype.start = function() {
+Scene_EncryptEnter.prototype.start = function () {
   Scene_MenuBase.prototype.start.call(this);
   this._editWindow.refresh();
 };
 
-Scene_EncryptEnter.prototype.createEditWindow = function() {
+Scene_EncryptEnter.prototype.createEditWindow = function () {
   const rect = this.editWindowRect();
   this._editWindow = new Window_EncryptEdit(rect);
   this._editWindow.setup("", "", this._maxLength);
   this.addWindow(this._editWindow);
 };
 
-Scene_EncryptEnter.prototype.editWindowRect = function() {
+Scene_EncryptEnter.prototype.editWindowRect = function () {
   const inputWindowHeight = this.calcWindowHeight(9, true);
   const padding = $gameSystem.windowPadding();
   const ww = 600;
@@ -1442,7 +1447,7 @@ Scene_EncryptEnter.prototype.editWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_EncryptEnter.prototype.createInputWindow = function() {
+Scene_EncryptEnter.prototype.createInputWindow = function () {
   const rect = this.inputWindowRect();
   this._inputWindow = new Window_NameInput(rect);
   this._inputWindow.isKSMInput = true;
@@ -1451,7 +1456,7 @@ Scene_EncryptEnter.prototype.createInputWindow = function() {
   this.addWindow(this._inputWindow);
 };
 
-Scene_EncryptEnter.prototype.inputWindowRect = function() {
+Scene_EncryptEnter.prototype.inputWindowRect = function () {
   const wx = this._editWindow.x;
   const wy = this._editWindow.y + this._editWindow.height + 8;
   const ww = this._editWindow.width;
@@ -1459,7 +1464,7 @@ Scene_EncryptEnter.prototype.inputWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_EncryptEnter.prototype.onInputOk = async function() {
+Scene_EncryptEnter.prototype.onInputOk = async function () {
   this.fadeOutAll();
   await DataManager.setupNewGame(true, "", this._editWindow.encryptPassword());
   SceneManager.goto(Scene_Map);
@@ -1476,16 +1481,16 @@ function Scene_NFTPhrase() {
 Scene_NFTPhrase.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_NFTPhrase.prototype.constructor = Scene_NFTPhrase;
 
-Scene_NFTPhrase.prototype.initialize = function() {
+Scene_NFTPhrase.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
   this._maxLength = 128;
 };
 
-Scene_NFTPhrase.prototype.prepare = function(maxLength) {
+Scene_NFTPhrase.prototype.prepare = function (maxLength) {
   this._maxLength = maxLength;
 };
 
-Scene_NFTPhrase.prototype.create = function() {
+Scene_NFTPhrase.prototype.create = function () {
   Scene_MenuBase.prototype.create.call(this);
 
   this.createEditWindow();
@@ -1496,19 +1501,19 @@ Scene_NFTPhrase.prototype.create = function() {
   });
 };
 
-Scene_NFTPhrase.prototype.start = function() {
+Scene_NFTPhrase.prototype.start = function () {
   Scene_MenuBase.prototype.start.call(this);
   this._editWindow.refresh();
 };
 
-Scene_NFTPhrase.prototype.createEditWindow = function() {
+Scene_NFTPhrase.prototype.createEditWindow = function () {
   const rect = this.editWindowRect();
   this._editWindow = new Window_PhraseEdit(rect);
   this._editWindow.setup(this._maxLength);
   this.addWindow(this._editWindow);
 };
 
-Scene_NFTPhrase.prototype.editWindowRect = function() {
+Scene_NFTPhrase.prototype.editWindowRect = function () {
   const inputWindowHeight = this.calcWindowHeight(9, true);
   const padding = $gameSystem.windowPadding();
   const ww = 600;
@@ -1518,7 +1523,7 @@ Scene_NFTPhrase.prototype.editWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTPhrase.prototype.createInputWindow = function() {
+Scene_NFTPhrase.prototype.createInputWindow = function () {
   const rect = this.inputWindowRect();
   this._inputWindow = new Window_NameInput(rect);
   this._inputWindow.isKSMInput = true;
@@ -1527,7 +1532,7 @@ Scene_NFTPhrase.prototype.createInputWindow = function() {
   this.addWindow(this._inputWindow);
 };
 
-Scene_NFTPhrase.prototype.inputWindowRect = function() {
+Scene_NFTPhrase.prototype.inputWindowRect = function () {
   const wx = this._editWindow.x;
   const wy = this._editWindow.y + this._editWindow.height + 8;
   const ww = this._editWindow.width;
@@ -1535,7 +1540,7 @@ Scene_NFTPhrase.prototype.inputWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_NFTPhrase.prototype.onInputOk = async function() {
+Scene_NFTPhrase.prototype.onInputOk = async function () {
   this.fadeOutAll();
   await DataManager.setupNewGame(true, this._editWindow.phrase());
   SceneManager.goto(Scene_Map);
@@ -1554,11 +1559,11 @@ function Window_NFTShopStatus() {
 Window_NFTShopStatus.prototype = Object.create(Window_ShopStatus.prototype);
 Window_NFTShopStatus.prototype.constructor = Window_NFTShopStatus;
 
-Window_NFTShopStatus.prototype.initialize = function(rect) {
+Window_NFTShopStatus.prototype.initialize = function (rect) {
   Window_ShopStatus.prototype.initialize.call(this, rect);
 };
 
-Window_ShopStatus.prototype.isEquipItem = function() {
+Window_ShopStatus.prototype.isEquipItem = function () {
   return true;
 };
 
@@ -1573,7 +1578,7 @@ function Window_EndpointEdit() {
 Window_EndpointEdit.prototype = Object.create(Window_StatusBase.prototype);
 Window_EndpointEdit.prototype.constructor = Window_EndpointEdit;
 
-Window_EndpointEdit.prototype.initialize = function(rect) {
+Window_EndpointEdit.prototype.initialize = function (rect) {
   Window_StatusBase.prototype.initialize.call(this, rect);
   this._maxLength = 0;
   this._endpoint = "";
@@ -1582,25 +1587,25 @@ Window_EndpointEdit.prototype.initialize = function(rect) {
   this.deactivate();
 };
 
-Window_EndpointEdit.prototype.setup = function(currentEndpoints, defaultEndpoint, maxLength) {
+Window_EndpointEdit.prototype.setup = function (currentEndpoints, defaultEndpoint, maxLength) {
   this._maxLength = maxLength;
   this._endpoint = currentEndpoints.slice(0, this._maxLength);
   this._index = this._endpoint.length;
   this._defaultEndpoint = defaultEndpoint;
 };
 
-Window_EndpointEdit.prototype.endpoint = function() {
+Window_EndpointEdit.prototype.endpoint = function () {
   return this._endpoint;
 };
 
-Window_EndpointEdit.prototype.restoreDefault = function() {
+Window_EndpointEdit.prototype.restoreDefault = function () {
   this._endpoint = this._defaultEndpoint;
   this._index = this._endpoint.length;
   this.refresh();
   return this._endpoint.length > 0;
 };
 
-Window_EndpointEdit.prototype.add = function(ch) {
+Window_EndpointEdit.prototype.add = function (ch) {
   if (this._index < this._maxLength) {
     this._endpoint += ch;
     this._index++;
@@ -1611,7 +1616,7 @@ Window_EndpointEdit.prototype.add = function(ch) {
   }
 };
 
-Window_EndpointEdit.prototype.back = function() {
+Window_EndpointEdit.prototype.back = function () {
   if (this._index > 0) {
     this._index--;
     this._endpoint = this._endpoint.slice(0, this._index);
@@ -1622,17 +1627,17 @@ Window_EndpointEdit.prototype.back = function() {
   }
 };
 
-Window_EndpointEdit.prototype.charWidth = function() {
+Window_EndpointEdit.prototype.charWidth = function () {
   return this.textWidth("A");
 };
 
-Window_EndpointEdit.prototype.left = function() {
+Window_EndpointEdit.prototype.left = function () {
   const endpointCenter = this.innerWidth / 2;
   const endpointWidth = (this._maxLength + 1) * this.charWidth();
   return Math.min(endpointCenter - endpointWidth / 2, this.innerWidth - endpointWidth);
 };
 
-Window_EndpointEdit.prototype.itemRect = function(index) {
+Window_EndpointEdit.prototype.itemRect = function (index) {
   const x = this.left() + index * this.charWidth();
   const y = 54;
   const width = this.charWidth();
@@ -1640,7 +1645,7 @@ Window_EndpointEdit.prototype.itemRect = function(index) {
   return new Rectangle(x, y, width, height);
 };
 
-Window_EndpointEdit.prototype.underlineRect = function(index) {
+Window_EndpointEdit.prototype.underlineRect = function (index) {
   const rect = this.itemRect(index);
   rect.x++;
   rect.y += rect.height - 4;
@@ -1649,11 +1654,11 @@ Window_EndpointEdit.prototype.underlineRect = function(index) {
   return rect;
 };
 
-Window_EndpointEdit.prototype.underlineColor = function() {
+Window_EndpointEdit.prototype.underlineColor = function () {
   return ColorManager.normalColor();
 };
 
-Window_EndpointEdit.prototype.drawUnderline = function(index) {
+Window_EndpointEdit.prototype.drawUnderline = function (index) {
   const rect = this.underlineRect(index);
   const color = this.underlineColor();
   this.contents.paintOpacity = 48;
@@ -1661,13 +1666,13 @@ Window_EndpointEdit.prototype.drawUnderline = function(index) {
   this.contents.paintOpacity = 255;
 };
 
-Window_EndpointEdit.prototype.drawChar = function(index) {
+Window_EndpointEdit.prototype.drawChar = function (index) {
   const rect = this.itemRect(index);
   this.resetTextColor();
   this.drawText(this._endpoint[index] || "", rect.x, rect.y);
 };
 
-Window_EndpointEdit.prototype.refresh = function() {
+Window_EndpointEdit.prototype.refresh = function () {
   this.contents.clear();
   for (let i = 0; i < this._maxLength; i++) {
     this.drawUnderline(i);
@@ -1705,7 +1710,7 @@ Window_CancelNFTSell.prototype.refresh = function () {
 };
 
 const window_cancel_nft_sell_itemrect_alias = Window_Command.prototype.itemRect;
-Window_CancelNFTSell.prototype.itemRect = function(index) {
+Window_CancelNFTSell.prototype.itemRect = function (index) {
   let rectangle = window_cancel_nft_sell_itemrect_alias.call(this, index);
   rectangle.y += this.height / 2 - 30;
   return rectangle;
@@ -1722,7 +1727,7 @@ function Window_PriceEdit() {
 Window_PriceEdit.prototype = Object.create(Window_StatusBase.prototype);
 Window_PriceEdit.prototype.constructor = Window_PriceEdit;
 
-Window_PriceEdit.prototype.initialize = function(rect) {
+Window_PriceEdit.prototype.initialize = function (rect) {
   Window_StatusBase.prototype.initialize.call(this, rect);
   this._maxLength = 64;
   this._price = "";
@@ -1731,7 +1736,7 @@ Window_PriceEdit.prototype.initialize = function(rect) {
   this.deactivate();
 };
 
-Window_PriceEdit.prototype.setup = function(maxLength) {
+Window_PriceEdit.prototype.setup = function (maxLength) {
   this._maxLength = maxLength;
   this._price = "";
   this._index = this._price.length;
@@ -1739,18 +1744,18 @@ Window_PriceEdit.prototype.setup = function(maxLength) {
   this.refresh();
 };
 
-Window_PriceEdit.prototype.price = function() {
+Window_PriceEdit.prototype.price = function () {
   return this._price;
 };
 
-Window_PriceEdit.prototype.restoreDefault = function() {
+Window_PriceEdit.prototype.restoreDefault = function () {
   this._price = this._defaultPrice;
   this._index = this._price.length;
   this.refresh();
   return this._price.length > 0;
 };
 
-Window_PriceEdit.prototype.add = function(ch) {
+Window_PriceEdit.prototype.add = function (ch) {
   if (this._index < this._maxLength) {
     this._price += ch;
     this._index++;
@@ -1761,7 +1766,7 @@ Window_PriceEdit.prototype.add = function(ch) {
   }
 };
 
-Window_PriceEdit.prototype.back = function() {
+Window_PriceEdit.prototype.back = function () {
   if (this._index > 0) {
     this._index--;
     this._price = this._price.slice(0, this._index);
@@ -1772,25 +1777,25 @@ Window_PriceEdit.prototype.back = function() {
   }
 };
 
-Window_PriceEdit.prototype.clear = function() {
+Window_PriceEdit.prototype.clear = function () {
   this._price = "";
   this._index = this._price.length;
   this._defaultPrice = "0";
   this.refresh();
 };
 
-Window_PriceEdit.prototype.charWidth = function() {
+Window_PriceEdit.prototype.charWidth = function () {
   const text = "0";
   return this.textWidth(text);
 };
 
-Window_PriceEdit.prototype.left = function() {
+Window_PriceEdit.prototype.left = function () {
   const priceCenter = this.innerWidth / 2;
   const priceWidth = (this._maxLength + 1) * this.charWidth();
   return Math.min(priceCenter - priceWidth / 2, this.innerWidth - priceWidth);
 };
 
-Window_PriceEdit.prototype.itemRect = function(index) {
+Window_PriceEdit.prototype.itemRect = function (index) {
   const x = this.left() + index * this.charWidth();
   const y = 5;
   const width = this.charWidth();
@@ -1798,7 +1803,7 @@ Window_PriceEdit.prototype.itemRect = function(index) {
   return new Rectangle(x, y, width, height);
 };
 
-Window_PriceEdit.prototype.underlineRect = function(index) {
+Window_PriceEdit.prototype.underlineRect = function (index) {
   const rect = this.itemRect(index);
   rect.x++;
   rect.y += rect.height - 4;
@@ -1807,11 +1812,11 @@ Window_PriceEdit.prototype.underlineRect = function(index) {
   return rect;
 };
 
-Window_PriceEdit.prototype.underlineColor = function() {
+Window_PriceEdit.prototype.underlineColor = function () {
   return ColorManager.normalColor();
 };
 
-Window_PriceEdit.prototype.drawUnderline = function(index) {
+Window_PriceEdit.prototype.drawUnderline = function (index) {
   const rect = this.underlineRect(index);
   const color = this.underlineColor();
   this.contents.paintOpacity = 48;
@@ -1819,13 +1824,13 @@ Window_PriceEdit.prototype.drawUnderline = function(index) {
   this.contents.paintOpacity = 255;
 };
 
-Window_PriceEdit.prototype.drawChar = function(index) {
+Window_PriceEdit.prototype.drawChar = function (index) {
   const rect = this.itemRect(index);
   this.resetTextColor();
   this.drawText(this._price[index] || "", rect.x, rect.y);
 };
 
-Window_PriceEdit.prototype.refresh = function() {
+Window_PriceEdit.prototype.refresh = function () {
   this.contents.clear();
   this.contents.fillAll("rgba(0,0,0,0)");
   for (let i = 0; i < this._maxLength; i++) {
@@ -1851,56 +1856,56 @@ Window_PriceInput.prototype.constructor = Window_PriceInput;
 
 // prettier-ignore
 Window_PriceInput.DIGITS =
-    [ "0","1","2","3","4",
-      "5","6","7","8","9",
-      "Clear", "OK" ];
+  ["0", "1", "2", "3", "4",
+    "5", "6", "7", "8", "9",
+    "Clear", "OK"];
 
-Window_PriceInput.prototype.initialize = function(rect) {
+Window_PriceInput.prototype.initialize = function (rect) {
   Window_Selectable.prototype.initialize.call(this, rect);
   this._editWindow = null;
   this._index = 0;
 };
 
-Window_PriceInput.prototype.setEditWindow = function(editWindow) {
+Window_PriceInput.prototype.setEditWindow = function (editWindow) {
   this._editWindow = editWindow;
   this.refresh();
   this.updateCursor();
   this.activate();
 };
 
-Window_PriceInput.prototype.table = function() {
+Window_PriceInput.prototype.table = function () {
   return Window_PriceInput.DIGITS;
 };
 
-Window_PriceInput.prototype.maxCols = function() {
+Window_PriceInput.prototype.maxCols = function () {
   return 5;
 };
 
-Window_PriceInput.prototype.maxItems = function() {
+Window_PriceInput.prototype.maxItems = function () {
   return 12;
 };
 
-Window_PriceInput.prototype.itemWidth = function() {
+Window_PriceInput.prototype.itemWidth = function () {
   return Math.floor((this.innerWidth - this.groupSpacing()) / 10);
 };
 
-Window_PriceInput.prototype.groupSpacing = function() {
+Window_PriceInput.prototype.groupSpacing = function () {
   return 12;
 };
 
-Window_PriceInput.prototype.character = function() {
+Window_PriceInput.prototype.character = function () {
   return this._index < 10 ? this.table()[this._index] : "";
 };
 
-Window_PriceInput.prototype.isClear = function() {
+Window_PriceInput.prototype.isClear = function () {
   return this._index === 10;
 };
 
-Window_PriceInput.prototype.isOk = function() {
+Window_PriceInput.prototype.isOk = function () {
   return this._index === 11;
 };
 
-Window_PriceInput.prototype.itemRect = function(index) {
+Window_PriceInput.prototype.itemRect = function (index) {
   const itemWidth = this.itemWidth();
   const itemHeight = this.itemHeight();
   const colSpacing = this.colSpacing();
@@ -1919,61 +1924,61 @@ Window_PriceInput.prototype.itemRect = function(index) {
   return new Rectangle(x, y, width, height);
 };
 
-Window_PriceInput.prototype.drawItem = function(index) {
+Window_PriceInput.prototype.drawItem = function (index) {
   const table = this.table();
   const character = table[index];
   const rect = this.itemLineRect(index);
   this.drawText(character, rect.x, rect.y, rect.width, "center");
 };
 
-Window_PriceInput.prototype.updateCursor = function() {
+Window_PriceInput.prototype.updateCursor = function () {
   const rect = this.itemRect(this._index);
   this.setCursorRect(rect.x, rect.y, rect.width, rect.height);
 };
 
-Window_PriceInput.prototype.isCursorMovable = function() {
+Window_PriceInput.prototype.isCursorMovable = function () {
   return this.active;
 };
 
-Window_PriceInput.prototype.cursorDown = function(wrap) {
+Window_PriceInput.prototype.cursorDown = function (wrap) {
   if (this._index < this.maxCols()) {
     this._index = this._index + this.maxCols();
   }
   else if (this._index < 9) {
-  	this._index = 10;
+    this._index = 10;
   }
   else if (this._index < 10) {
     this._index = 11;
   }
 };
 
-Window_PriceInput.prototype.cursorUp = function(wrap) {
+Window_PriceInput.prototype.cursorUp = function (wrap) {
   if (this._index >= 10) {
     this._index = this._index - 2;
   }
   else if (this._index >= this.maxCols()) {
-  	this._index = this._index - this.maxCols();
+    this._index = this._index - this.maxCols();
   }
 };
 
-Window_PriceInput.prototype.cursorRight = function(wrap) {
+Window_PriceInput.prototype.cursorRight = function (wrap) {
   if (this._index < 11) {
     this._index++;
   }
 };
 
-Window_PriceInput.prototype.cursorLeft = function(wrap) {
+Window_PriceInput.prototype.cursorLeft = function (wrap) {
   if (this._index > 0) {
     this._index--;
   }
 };
 
-Window_PriceInput.prototype.processCursorMove = function() {
+Window_PriceInput.prototype.processCursorMove = function () {
   Window_Selectable.prototype.processCursorMove.call(this);
   this.updateCursor();
 };
 
-Window_PriceInput.prototype.processHandling = function() {
+Window_PriceInput.prototype.processHandling = function () {
   if (this.isOpen() && this.active) {
     if (Input.isTriggered("shift")) {
       this.processJump();
@@ -1987,22 +1992,22 @@ Window_PriceInput.prototype.processHandling = function() {
   }
 };
 
-Window_PriceInput.prototype.isCancelEnabled = function() {
+Window_PriceInput.prototype.isCancelEnabled = function () {
   return true;
 };
 
-Window_PriceInput.prototype.processCancel = function() {
+Window_PriceInput.prototype.processCancel = function () {
   this.processBack();
 };
 
-Window_PriceInput.prototype.processJump = function() {
+Window_PriceInput.prototype.processJump = function () {
   if (this._index !== 11) {
     this._index = 11;
     this.playCursorSound();
   }
 };
 
-Window_PriceInput.prototype.processBack = function() {
+Window_PriceInput.prototype.processBack = function () {
   SceneManager._scene._priceInputWindow.hide();
   SceneManager._scene._priceInputWindow.deactivate();
   SceneManager._scene._priceEditWindow.hide();
@@ -2011,7 +2016,7 @@ Window_PriceInput.prototype.processBack = function() {
   SceneManager._scene._helpWindow.setText("");
 };
 
-Window_PriceInput.prototype.processOk = function() {
+Window_PriceInput.prototype.processOk = function () {
   if (this.character()) {
     this.onPriceAdd();
   } else if (this.isOk()) {
@@ -2021,7 +2026,7 @@ Window_PriceInput.prototype.processOk = function() {
   }
 };
 
-Window_PriceInput.prototype.onPriceAdd = function() {
+Window_PriceInput.prototype.onPriceAdd = function () {
   if (this._editWindow.add(this.character())) {
     this.playOkSound();
   } else {
@@ -2029,7 +2034,7 @@ Window_PriceInput.prototype.onPriceAdd = function() {
   }
 };
 
-Window_PriceInput.prototype.onPriceOk = function() {
+Window_PriceInput.prototype.onPriceOk = function () {
   if (this._editWindow.price() === "") {
     if (this._editWindow.restoreDefault()) {
       this.playOkSound();
@@ -2042,7 +2047,7 @@ Window_PriceInput.prototype.onPriceOk = function() {
   }
 };
 
-Window_PriceInput.prototype.onPriceClear = function() {
+Window_PriceInput.prototype.onPriceClear = function () {
   if (this._editWindow.back()) {
     this.playOkSound();
   } else {
@@ -2061,7 +2066,7 @@ function Window_Spinner() {
 Window_Spinner.prototype = Object.create(Window_Base.prototype);
 Window_Spinner.prototype.constructor = Window_Spinner;
 
-Window_Spinner.prototype.initialize = function(rect) {
+Window_Spinner.prototype.initialize = function (rect) {
   Window_Base.prototype.initialize.call(this, rect);
   this._dots = 0;
   this._dotsUpdateFrame = 0;
@@ -2069,7 +2074,7 @@ Window_Spinner.prototype.initialize = function(rect) {
   this._text = "";
 };
 
-Window_Spinner.prototype.update = function() {
+Window_Spinner.prototype.update = function () {
   Window_Base.prototype.update.call(this);
   this.contents.clear();
   this.contents.paintOpacity = 100;
@@ -2092,15 +2097,15 @@ Window_Spinner.prototype.update = function() {
   }
 };
 
-Window_Spinner.prototype.updatePadding = function() {
+Window_Spinner.prototype.updatePadding = function () {
   this.padding = -5;
 };
 
-Window_Spinner.prototype._refreshFrame = function() {
+Window_Spinner.prototype._refreshFrame = function () {
 
 };
 
-Window_Spinner.prototype._refreshBack = function() {
+Window_Spinner.prototype._refreshBack = function () {
 
 };
 
@@ -2115,7 +2120,7 @@ function Window_NFTShopBuy() {
 Window_NFTShopBuy.prototype = Object.create(Window_Selectable.prototype);
 Window_NFTShopBuy.prototype.constructor = Window_NFTShopBuy;
 
-Window_NFTShopBuy.prototype.initialize = async function(rect) {
+Window_NFTShopBuy.prototype.initialize = async function (rect) {
   Window_Selectable.prototype.initialize.call(this, rect);
 
   if (initialized) {
@@ -2129,30 +2134,30 @@ Window_NFTShopBuy.prototype.initialize = async function(rect) {
   SubscribeToNewNFTItems(this);
 };
 
-Window_NFTShopBuy.prototype.destroy = function(options) {
+Window_NFTShopBuy.prototype.destroy = function (options) {
   UnsubscribeFromNewNFTItems(this);
   Window_Selectable.prototype.destroy.call(this, options);
 };
 
-Window_NFTShopBuy.prototype.onNewNFTItem = async function(newNftItem) {
+Window_NFTShopBuy.prototype.onNewNFTItem = async function (newNftItem) {
   this._nftItems = JSON.parse(await getNftsForSale(collectionId));
   this.refresh();
   this.select(0);
 };
 
-Window_NFTShopBuy.prototype.maxItems = function() {
+Window_NFTShopBuy.prototype.maxItems = function () {
   return this._nftItems ? this._nftItems.length : 0;
 };
 
-Window_NFTShopBuy.prototype.item = function() {
+Window_NFTShopBuy.prototype.item = function () {
   return this.itemAt(this.index());
 };
 
-Window_NFTShopBuy.prototype.itemAt = function(index) {
+Window_NFTShopBuy.prototype.itemAt = function (index) {
   return (this._nftItems && index >= 0 && index < this._nftItems.length) ? this._nftItems[index] : null;
 };
 
-Window_NFTShopBuy.prototype.itemMetadata = function() {
+Window_NFTShopBuy.prototype.itemMetadata = function () {
   const item = this.itemAt(this.index());
   if (!item) return null;
   const metadata = JSON.parse(item.metadata);
@@ -2164,7 +2169,7 @@ Window_NFTShopBuy.prototype.itemMetadata = function() {
   return propGameDataValue;
 };
 
-Window_NFTShopBuy.prototype.itemMetadataAt = function(index) {
+Window_NFTShopBuy.prototype.itemMetadataAt = function (index) {
   const item = this.itemAt(index);
   if (!item) return null;
   const metadata = JSON.parse(item.metadata);
@@ -2176,22 +2181,22 @@ Window_NFTShopBuy.prototype.itemMetadataAt = function(index) {
   return propGameDataValue;
 };
 
-Window_NFTShopBuy.prototype.isCurrentItemEnabled = function() {
+Window_NFTShopBuy.prototype.isCurrentItemEnabled = function () {
   return this.isEnabled(this._nftItems[this.index()]);
 };
 
-Window_NFTShopBuy.prototype.price = function(item) {
+Window_NFTShopBuy.prototype.price = function (item) {
   return item ? item.forsale : 0;
 };
 
-Window_NFTShopBuy.prototype.isEnabled = function(item) {
+Window_NFTShopBuy.prototype.isEnabled = function (item) {
   return true;
   return (
-      item && this.price(item) <= $ksmCachedBalance
+    item && this.price(item) <= $ksmCachedBalance
   );
 };
 
-Window_NFTShopBuy.prototype.drawItem = function(index) {
+Window_NFTShopBuy.prototype.drawItem = function (index) {
   const item = this.itemAt(index);
   const itemMetadata = this.itemMetadataAt(index);
   const price = this.price(item);
@@ -2205,16 +2210,16 @@ Window_NFTShopBuy.prototype.drawItem = function(index) {
   this.changePaintOpacity(true);
 };
 
-Window_NFTShopBuy.prototype.priceWidth = function() {
+Window_NFTShopBuy.prototype.priceWidth = function () {
   return 96;
 };
 
-Window_NFTShopBuy.prototype.setStatusWindow = function(statusWindow) {
+Window_NFTShopBuy.prototype.setStatusWindow = function (statusWindow) {
   this._statusWindow = statusWindow;
   this.callUpdateHelp();
 };
 
-Window_NFTShopBuy.prototype.updateHelp = function() {
+Window_NFTShopBuy.prototype.updateHelp = function () {
   this.setHelpWindowItem(this.itemMetadata());
   if (this._statusWindow) {
     this._statusWindow.setItem(this.itemMetadata());
@@ -2248,7 +2253,7 @@ Window_NFTBuyConfirm.prototype.refresh = function () {
 };
 
 const window_nft_buy_confirm_itemrect_alias = Window_Command.prototype.itemRect;
-Window_NFTBuyConfirm.prototype.itemRect = function(index) {
+Window_NFTBuyConfirm.prototype.itemRect = function (index) {
   let rectangle = window_nft_buy_confirm_itemrect_alias.call(this, index);
   rectangle.y += this.height / 2 - 30;
   return rectangle;
@@ -2265,44 +2270,44 @@ function Window_NFTShopSell() {
 Window_NFTShopSell.prototype = Object.create(Window_Selectable.prototype);
 Window_NFTShopSell.prototype.constructor = Window_NFTShopSell;
 
-Window_NFTShopSell.prototype.initialize = async function(rect) {
+Window_NFTShopSell.prototype.initialize = async function (rect) {
   Window_Selectable.prototype.initialize.call(this, rect);
   this.refresh();
   SubscribeToNewNFTItems(this);
 };
 
-Window_NFTShopSell.prototype.destroy = function(options) {
+Window_NFTShopSell.prototype.destroy = function (options) {
   UnsubscribeFromNewNFTItems(this);
   Window_Selectable.prototype.destroy.call(this, options);
 };
 
-Window_NFTShopSell.prototype.onNewNFTItem = async function(newNftItem) {
+Window_NFTShopSell.prototype.onNewNFTItem = async function (newNftItem) {
   this.refresh();
 };
 
-Window_NFTShopSell.prototype.refresh = async function() {
+Window_NFTShopSell.prototype.refresh = async function () {
   this._nftItems = getAllUnequippedNFTForCollection(collectionId);
   Window_Selectable.prototype.refresh.call(this);
   this.select(0);
 };
 
-Window_NFTShopSell.prototype.maxItems = function() {
+Window_NFTShopSell.prototype.maxItems = function () {
   return this._nftItems ? this._nftItems.length : 0;
 };
 
-Window_NFTShopSell.prototype.item = function() {
+Window_NFTShopSell.prototype.item = function () {
   return this.itemAt(this.index());
 };
 
-Window_NFTShopSell.prototype.itemAt = function(index) {
+Window_NFTShopSell.prototype.itemAt = function (index) {
   return (this._nftItems && index >= 0 && index < this._nftItems.length) ? this._nftItems[index] : null;
 };
 
-Window_NFTShopSell.prototype.itemMetadata = function() {
+Window_NFTShopSell.prototype.itemMetadata = function () {
   const item = this.itemAt(this.index());
-  
+
   console.log(item);
-  
+
   if (!item) return null;
   const metadata = JSON.parse(item.metadata);
   if (!metadata.properties) return null;
@@ -2313,11 +2318,11 @@ Window_NFTShopSell.prototype.itemMetadata = function() {
   return propGameDataValue;
 };
 
-Window_NFTShopSell.prototype.itemMetadataAt = function(index) {
+Window_NFTShopSell.prototype.itemMetadataAt = function (index) {
   const item = this.itemAt(index);
-  
+
   console.log(item);
-  
+
   if (!item) return null;
   const metadata = JSON.parse(item.metadata);
   if (!metadata.properties) return null;
@@ -2328,18 +2333,18 @@ Window_NFTShopSell.prototype.itemMetadataAt = function(index) {
   return propGameDataValue;
 };
 
-Window_NFTShopSell.prototype.isCurrentItemEnabled = function() {
+Window_NFTShopSell.prototype.isCurrentItemEnabled = function () {
   return this.isEnabled(this._nftItems[this.index()]);
 };
 
-Window_NFTShopSell.prototype.isEnabled = function(item) {
+Window_NFTShopSell.prototype.isEnabled = function (item) {
   return true;
   return (
-      item && this.price(item) <= $ksmCachedBalance
+    item && this.price(item) <= $ksmCachedBalance
   );
 };
 
-Window_NFTShopSell.prototype.drawItem = function(index) {
+Window_NFTShopSell.prototype.drawItem = function (index) {
   const item = this.itemAt(index);
   const itemMetadata = this.itemMetadataAt(index);
   //const price = this.price(item);
@@ -2361,12 +2366,12 @@ Window_NFTShopSell.prototype.drawItem = function(index) {
 //   return 96;
 // };
 
-Window_NFTShopSell.prototype.setStatusWindow = function(statusWindow) {
+Window_NFTShopSell.prototype.setStatusWindow = function (statusWindow) {
   this._statusWindow = statusWindow;
   this.callUpdateHelp();
 };
 
-Window_NFTShopSell.prototype.updateHelp = function() {
+Window_NFTShopSell.prototype.updateHelp = function () {
   this.setHelpWindowItem(this.itemMetadata());
   if (this._statusWindow) {
     this._statusWindow.setItem(this.itemMetadata());
@@ -2396,15 +2401,15 @@ Window_NFTShopList.prototype.initialize = async function (rect) {
   this.refresh();
 };
 
-Window_NFTShopList.prototype.maxCols = function() {
+Window_NFTShopList.prototype.maxCols = function () {
   return 1;
 };
 
-Window_NFTShopList.prototype.maxItems = function() {
+Window_NFTShopList.prototype.maxItems = function () {
   return this._nftItems ? this._nftItems.length : 0;
 };
 
-Window_NFTShopList.prototype.drawItem = function(index) {
+Window_NFTShopList.prototype.drawItem = function (index) {
   const nftItem = this._nftItems[index];
   const metadata = JSON.parse(nftItem.metadata);
   const rect = this.itemLineRect(index);
@@ -2415,7 +2420,7 @@ Window_NFTShopList.prototype.drawItem = function(index) {
   this.drawText("Price: " + nftItem.forsale, rect.x, rect.y + 75, rect.width, 25, "left");
 };
 
-Window_NFTShopList.prototype.isCursorMovable = function() {
+Window_NFTShopList.prototype.isCursorMovable = function () {
   return this.active;
 };
 
@@ -2423,7 +2428,7 @@ Window_NFTShopList.prototype.lineHeight = function () {
   return 100;
 };
 
-Window_NFTShopList.prototype.drawText = function(text, x, y, maxWidth, lineHeight, align) {
+Window_NFTShopList.prototype.drawText = function (text, x, y, maxWidth, lineHeight, align) {
   this.contents.drawText(text, x, y, maxWidth, lineHeight, align);
 };
 
@@ -2443,12 +2448,12 @@ Window_NFTNotification.prototype.initialize = function (rect) {
   this.refresh();
 };
 
-Window_NFTNotification.prototype.setItem = function(item) {
+Window_NFTNotification.prototype.setItem = function (item) {
   this._item = item;
   this.refresh();
 };
 
-Window_NFTNotification.prototype.refresh = async function() {
+Window_NFTNotification.prototype.refresh = async function () {
   this.contents.clear();
 
   if (this._item) {
@@ -2482,7 +2487,7 @@ Window_KSMAddressAndBalance.prototype.initialize = function (rect) {
   this.refresh();
 };
 
-Window_KSMAddressAndBalance.prototype.refresh = async function() {
+Window_KSMAddressAndBalance.prototype.refresh = async function () {
   this.contents.clear();
   this.contents.fontSize = 16;
   this.drawText("address: " + $ksmInfo.address, 0, -5, 500, "left");
@@ -2505,17 +2510,17 @@ Window_KSMAddress.prototype.initialize = function (rect) {
   this.refresh();
 };
 
-Window_KSMAddress.prototype.refresh = async function() {
+Window_KSMAddress.prototype.refresh = async function () {
   this.contents.clear();
   this.contents.fontSize = 16;
   this.drawText("address: " + $ksmInfo.address, 0, -5, this.width, "center");
 };
 
-Window_KSMAddress.prototype._refreshBack = function() {
+Window_KSMAddress.prototype._refreshBack = function () {
 
 };
 
-Window_KSMAddress.prototype._refreshFrame = function() {
+Window_KSMAddress.prototype._refreshFrame = function () {
 
 };
 
@@ -2530,22 +2535,22 @@ function Window_KSMBalance() {
 Window_KSMBalance.prototype = Object.create(Window_Selectable.prototype);
 Window_KSMBalance.prototype.constructor = Window_KSMBalance;
 
-Window_KSMBalance.prototype.initialize = function(rect) {
+Window_KSMBalance.prototype.initialize = function (rect) {
   Window_Selectable.prototype.initialize.call(this, rect);
   this.refresh();
   SubscribeToBalanceUpdate(this);
 };
 
-Window_KSMBalance.prototype.destroy = function(options) {
+Window_KSMBalance.prototype.destroy = function (options) {
   UnsubscribeFromBalanceUpdate(this);
   Window_Selectable.prototype.destroy.call(this, options);
 };
 
-Window_KSMBalance.prototype.colSpacing = function() {
+Window_KSMBalance.prototype.colSpacing = function () {
   return 0;
 };
 
-Window_KSMBalance.prototype.refresh = async function() {
+Window_KSMBalance.prototype.refresh = async function () {
   const rect = this.itemLineRect(0);
   const x = rect.x;
   const y = rect.y;
@@ -2554,7 +2559,7 @@ Window_KSMBalance.prototype.refresh = async function() {
   this.drawCurrencyValue($ksmCachedBalance, this.currencyUnit(), x, y, width);
 };
 
-Window_KSMBalance.prototype.currencyUnit = function() {
+Window_KSMBalance.prototype.currencyUnit = function () {
   return "KSM";
 };
 
@@ -2573,7 +2578,7 @@ function Window_PhraseEdit() {
 Window_PhraseEdit.prototype = Object.create(Window_StatusBase.prototype);
 Window_PhraseEdit.prototype.constructor = Window_PhraseEdit;
 
-Window_PhraseEdit.prototype.initialize = function(rect) {
+Window_PhraseEdit.prototype.initialize = function (rect) {
   Window_StatusBase.prototype.initialize.call(this, rect);
   this._maxLength = 0;
   this._phrase = "";
@@ -2581,18 +2586,18 @@ Window_PhraseEdit.prototype.initialize = function(rect) {
   this.deactivate();
 };
 
-Window_PhraseEdit.prototype.setup = function(maxLength) {
+Window_PhraseEdit.prototype.setup = function (maxLength) {
   this._maxLength = maxLength;
   this._phrase = "";
   //this._phrase = "stone fault top bubble human exit cigar twist slot drift erosion endorse";
   this._index = 0;
 };
 
-Window_PhraseEdit.prototype.phrase = function() {
+Window_PhraseEdit.prototype.phrase = function () {
   return this._phrase;
 };
 
-Window_PhraseEdit.prototype.add = function(ch) {
+Window_PhraseEdit.prototype.add = function (ch) {
   if (this._index < this._maxLength) {
     this._phrase += ch;
     this._index++;
@@ -2603,7 +2608,7 @@ Window_PhraseEdit.prototype.add = function(ch) {
   }
 };
 
-Window_PhraseEdit.prototype.back = function() {
+Window_PhraseEdit.prototype.back = function () {
   if (this._index > 0) {
     this._index--;
     this._phrase = this._phrase.slice(0, this._index);
@@ -2614,29 +2619,29 @@ Window_PhraseEdit.prototype.back = function() {
   }
 };
 
-Window_PhraseEdit.prototype.charWidth = function() {
+Window_PhraseEdit.prototype.charWidth = function () {
   return this.textWidth("A");
 };
 
-Window_PhraseEdit.prototype.countLines = function() {
+Window_PhraseEdit.prototype.countLines = function () {
   const fullWidth = (this._maxLength + 1) * this.charWidth();
-  return Math.ceil(fullWidth/ this.innerWidth);
+  return Math.ceil(fullWidth / this.innerWidth);
 };
 
-Window_PhraseEdit.prototype.leftOffset = function() {
+Window_PhraseEdit.prototype.leftOffset = function () {
   const fullWidth = (this._maxLength + 1) * this.charWidth();
   const countLines = this.countLines();
   const lineWidth = fullWidth / countLines;
   return this.innerWidth / 2 - lineWidth / 2;
 };
 
-Window_PhraseEdit.prototype.topOffset = function() {
+Window_PhraseEdit.prototype.topOffset = function () {
   const countLines = this.countLines();
   const height = this.lineHeight();
   return this.innerHeight / 2 - (countLines * height) / 2;
 };
 
-Window_PhraseEdit.prototype.charPos = function(index) {
+Window_PhraseEdit.prototype.charPos = function (index) {
   const fullWidth = (this._maxLength + 1) * this.charWidth();
   const countLines = this.countLines();
   const lineWidth = fullWidth / countLines;
@@ -2651,7 +2656,7 @@ Window_PhraseEdit.prototype.charPos = function(index) {
   };
 };
 
-Window_PhraseEdit.prototype.itemRect = function(index) {
+Window_PhraseEdit.prototype.itemRect = function (index) {
   const charPos = this.charPos(index);
   const x = charPos.x;
   const y = charPos.y;
@@ -2660,7 +2665,7 @@ Window_PhraseEdit.prototype.itemRect = function(index) {
   return new Rectangle(x, y, width, height);
 };
 
-Window_PhraseEdit.prototype.underlineRect = function(index) {
+Window_PhraseEdit.prototype.underlineRect = function (index) {
   const rect = this.itemRect(index);
   rect.x++;
   rect.y += rect.height - 4;
@@ -2669,11 +2674,11 @@ Window_PhraseEdit.prototype.underlineRect = function(index) {
   return rect;
 };
 
-Window_PhraseEdit.prototype.underlineColor = function() {
+Window_PhraseEdit.prototype.underlineColor = function () {
   return ColorManager.normalColor();
 };
 
-Window_PhraseEdit.prototype.drawUnderline = function(index) {
+Window_PhraseEdit.prototype.drawUnderline = function (index) {
   const rect = this.underlineRect(index);
   const color = this.underlineColor();
   this.contents.paintOpacity = 48;
@@ -2681,13 +2686,13 @@ Window_PhraseEdit.prototype.drawUnderline = function(index) {
   this.contents.paintOpacity = 255;
 };
 
-Window_PhraseEdit.prototype.drawChar = function(index) {
+Window_PhraseEdit.prototype.drawChar = function (index) {
   const rect = this.itemRect(index);
   this.resetTextColor();
   this.drawText(this._phrase[index] || "", rect.x, rect.y);
 };
 
-Window_PhraseEdit.prototype.refresh = function() {
+Window_PhraseEdit.prototype.refresh = function () {
   this.contents.clear();
   for (let i = 0; i < this._maxLength; i++) {
     this.drawUnderline(i);
@@ -2730,7 +2735,7 @@ function Window_EncryptConfirm() {
 Window_EncryptConfirm.prototype = Object.create(Window_Command.prototype);
 Window_EncryptConfirm.prototype.constructor = Window_EncryptConfirm;
 
-Window_EncryptConfirm.prototype.initialize = function(rect) {
+Window_EncryptConfirm.prototype.initialize = function (rect) {
   Window_Command.prototype.initialize.call(this, rect);
 };
 
@@ -2752,7 +2757,7 @@ Window_EncryptConfirm.prototype.makeCommandList = function () {
 };
 
 const encryptconfirm_itemrect_alias = Window_Command.prototype.itemRect;
-Window_EncryptConfirm.prototype.itemRect = function(index) {
+Window_EncryptConfirm.prototype.itemRect = function (index) {
   let rectangle = encryptconfirm_itemrect_alias.call(this, index);
   rectangle.y += 65;
   return rectangle;
@@ -2769,7 +2774,7 @@ function Window_EncryptEdit() {
 Window_EncryptEdit.prototype = Object.create(Window_StatusBase.prototype);
 Window_EncryptEdit.prototype.constructor = Window_EncryptEdit;
 
-Window_EncryptEdit.prototype.initialize = function(rect) {
+Window_EncryptEdit.prototype.initialize = function (rect) {
   Window_StatusBase.prototype.initialize.call(this, rect);
   this._maxLength = 0;
   this._encryptPassword = "";
@@ -2778,25 +2783,25 @@ Window_EncryptEdit.prototype.initialize = function(rect) {
   this.deactivate();
 };
 
-Window_EncryptEdit.prototype.setup = function(currentPassword, defaultPassword, maxLength) {
+Window_EncryptEdit.prototype.setup = function (currentPassword, defaultPassword, maxLength) {
   this._maxLength = maxLength;
   this._encryptPassword = currentPassword.slice(0, this._maxLength);
   this._index = this._encryptPassword.length;
   this._defaultEncryptPassword = defaultPassword;
 };
 
-Window_EncryptEdit.prototype.encryptPassword = function() {
+Window_EncryptEdit.prototype.encryptPassword = function () {
   return this._encryptPassword;
 };
 
-Window_EncryptEdit.prototype.restoreDefault = function() {
+Window_EncryptEdit.prototype.restoreDefault = function () {
   this._encryptPassword = this._defaultEncryptPassword;
   this._index = this._encryptPassword.length;
   this.refresh();
   return this._encryptPassword.length > 0;
 };
 
-Window_EncryptEdit.prototype.add = function(ch) {
+Window_EncryptEdit.prototype.add = function (ch) {
   if (this._index < this._maxLength) {
     this._encryptPassword += ch;
     this._index++;
@@ -2807,7 +2812,7 @@ Window_EncryptEdit.prototype.add = function(ch) {
   }
 };
 
-Window_EncryptEdit.prototype.back = function() {
+Window_EncryptEdit.prototype.back = function () {
   if (this._index > 0) {
     this._index--;
     this._encryptPassword = this._encryptPassword.slice(0, this._index);
@@ -2818,17 +2823,17 @@ Window_EncryptEdit.prototype.back = function() {
   }
 };
 
-Window_EncryptEdit.prototype.charWidth = function() {
+Window_EncryptEdit.prototype.charWidth = function () {
   return this.textWidth("A");
 };
 
-Window_EncryptEdit.prototype.left = function() {
+Window_EncryptEdit.prototype.left = function () {
   const endpointCenter = this.innerWidth / 2;
   const endpointWidth = (this._maxLength + 1) * this.charWidth();
   return Math.min(endpointCenter - endpointWidth / 2, this.innerWidth - endpointWidth);
 };
 
-Window_EncryptEdit.prototype.itemRect = function(index) {
+Window_EncryptEdit.prototype.itemRect = function (index) {
   const x = this.left() + index * this.charWidth();
   const y = 54;
   const width = this.charWidth();
@@ -2836,7 +2841,7 @@ Window_EncryptEdit.prototype.itemRect = function(index) {
   return new Rectangle(x, y, width, height);
 };
 
-Window_EncryptEdit.prototype.underlineRect = function(index) {
+Window_EncryptEdit.prototype.underlineRect = function (index) {
   const rect = this.itemRect(index);
   rect.x++;
   rect.y += rect.height - 4;
@@ -2845,11 +2850,11 @@ Window_EncryptEdit.prototype.underlineRect = function(index) {
   return rect;
 };
 
-Window_EncryptEdit.prototype.underlineColor = function() {
+Window_EncryptEdit.prototype.underlineColor = function () {
   return ColorManager.normalColor();
 };
 
-Window_EncryptEdit.prototype.drawUnderline = function(index) {
+Window_EncryptEdit.prototype.drawUnderline = function (index) {
   const rect = this.underlineRect(index);
   const color = this.underlineColor();
   this.contents.paintOpacity = 48;
@@ -2857,13 +2862,13 @@ Window_EncryptEdit.prototype.drawUnderline = function(index) {
   this.contents.paintOpacity = 255;
 };
 
-Window_EncryptEdit.prototype.drawChar = function(index) {
+Window_EncryptEdit.prototype.drawChar = function (index) {
   const rect = this.itemRect(index);
   this.resetTextColor();
   this.drawText(this._encryptPassword[index] || "", rect.x, rect.y);
 };
 
-Window_EncryptEdit.prototype.refresh = function() {
+Window_EncryptEdit.prototype.refresh = function () {
   this.contents.clear();
   for (let i = 0; i < this._maxLength; i++) {
     this.drawUnderline(i);
@@ -2879,14 +2884,14 @@ Window_EncryptEdit.prototype.refresh = function() {
 
 // Scene_Options
 
-Scene_Options.prototype.createOptionsWindow = function() {
+Scene_Options.prototype.createOptionsWindow = function () {
   const rect = this.optionsWindowRect();
   this._optionsWindow = new Window_Options(rect);
   this._optionsWindow.setHandler("cancel", this.popScene.bind(this));
   this.addWindow(this._optionsWindow);
 };
 
-Scene_Options.prototype.maxCommands = function() {
+Scene_Options.prototype.maxCommands = function () {
   // Increase this value when adding option items.
   return 9;
 };
@@ -2895,18 +2900,18 @@ Scene_Options.prototype.maxCommands = function() {
 // Window_Options
 
 const window_options_make_command_list_alias = Window_Options.prototype.makeCommandList;
-Window_Options.prototype.makeCommandList = function() {
+Window_Options.prototype.makeCommandList = function () {
   window_options_make_command_list_alias.call(this);
   this.addKSMOptions();
 };
 
-Window_Options.prototype.addKSMOptions = function() {
+Window_Options.prototype.addKSMOptions = function () {
   this.addCommand("KSM Endpoint", "ksmEndpoint");
   this.addCommand("RMRK Endpoint", "rmrkEndpoint");
 };
 
 const window_options_draw_item_alias = Window_Options.prototype.drawItem;
-Window_Options.prototype.drawItem = function(index) {
+Window_Options.prototype.drawItem = function (index) {
   switch (this.commandSymbol(index)) {
     case "ksmEndpoint":
     case "rmrkEndpoint":
@@ -2924,7 +2929,7 @@ Window_Options.prototype.drawItem = function(index) {
 };
 
 const window_options_process_ok_alias = Window_Options.prototype.processOk;
-Window_Options.prototype.processOk = function() {
+Window_Options.prototype.processOk = function () {
   switch (this.commandSymbol(this.index())) {
     case "ksmEndpoint":
       SceneManager.push(Scene_ChangeKSMEndpoint);
@@ -2941,7 +2946,7 @@ Window_Options.prototype.processOk = function() {
 // Window_EquipItem
 
 const window_equip_item_includes_alias = Window_EquipItem.prototype.includes;
-Window_EquipItem.prototype.includes = function(item) {
+Window_EquipItem.prototype.includes = function (item) {
   if (item && item.nftId && $ksmCachedNFTOnSale.some(e => e.id === item.nftId)) {
     return false;
   }
@@ -2950,7 +2955,7 @@ Window_EquipItem.prototype.includes = function(item) {
 
 // Window_NameInput
 
-Window_NameInput.prototype.onNameOk = function() {
+Window_NameInput.prototype.onNameOk = function () {
   if (this.isKSMInput) {
     this.playOkSound();
     this.callOkHandler();
@@ -2969,7 +2974,7 @@ Window_NameInput.prototype.onNameOk = function() {
   }
 };
 
-Window_NameInput.prototype.table = function() {
+Window_NameInput.prototype.table = function () {
   if (this.isKSMInput) {
     return [Window_NameInput.LATIN1, Window_NameInput.LATIN2];
   }
@@ -2989,7 +2994,7 @@ Window_NameInput.prototype.table = function() {
 
 // Window_Base
 
-Window_Base.prototype.drawIconWithSize = function(iconIndex, x, y, width, height) {
+Window_Base.prototype.drawIconWithSize = function (iconIndex, x, y, width, height) {
   const bitmap = ImageManager.loadSystem("IconSet");
   const pw = ImageManager.iconWidth;
   const ph = ImageManager.iconHeight;
@@ -3000,13 +3005,13 @@ Window_Base.prototype.drawIconWithSize = function(iconIndex, x, y, width, height
 
 // Window_Help
 
-Window_Help.prototype.refresh = function() {
+Window_Help.prototype.refresh = function () {
   const rect = this.baseTextRect();
   this.contents.clear();
   this.drawTextEx(this.wrapText(this._text), rect.x, rect.y, rect.width);
 };
 
-Window_Help.prototype.wrapText = function(text) {
+Window_Help.prototype.wrapText = function (text) {
   const textParts = text.split(".");
   if (textParts && textParts.length > 0) {
     return textParts[0] + ".";
@@ -3017,20 +3022,20 @@ Window_Help.prototype.wrapText = function(text) {
 // Scene_Menu
 
 const scene_menu_create_alias = Scene_Menu.prototype.create;
-Scene_Menu.prototype.create = function() {
+Scene_Menu.prototype.create = function () {
   scene_menu_create_alias.call(this);
   this.createKSMBalanceWindow();
   this.createKSMAddressWindow();
 };
 
-Scene_Menu.prototype.createKSMBalanceWindow = function() {
+Scene_Menu.prototype.createKSMBalanceWindow = function () {
   const rect = this.ksmBalanceWindowRect();
   this._ksmBalanceWindow = new Window_KSMBalance(rect);
   this._ksmBalanceWindow.open();
   this.addWindow(this._ksmBalanceWindow);
 };
 
-Scene_Menu.prototype.ksmBalanceWindowRect = function() {
+Scene_Menu.prototype.ksmBalanceWindowRect = function () {
   const ww = this.mainCommandWidth();
   const wh = this.calcWindowHeight(1, true);
   const wx = this.isRightInputMode() ? Graphics.boxWidth - ww : 0;
@@ -3038,13 +3043,13 @@ Scene_Menu.prototype.ksmBalanceWindowRect = function() {
   return new Rectangle(wx, wy, ww, wh);
 };
 
-Scene_Menu.prototype.createKSMAddressWindow = function() {
+Scene_Menu.prototype.createKSMAddressWindow = function () {
   const rect = this.ksmAddressWindowRect();
   this._ksmAddressWindow = new Window_KSMAddress(rect);
   this.addWindow(this._ksmAddressWindow);
 };
 
-Scene_Menu.prototype.ksmAddressWindowRect = function() {
+Scene_Menu.prototype.ksmAddressWindowRect = function () {
   const ww = Graphics.boxWidth - 100;
   const wh = 50;
   const wx = 0;

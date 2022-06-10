@@ -432,6 +432,8 @@ DataManager.setupNewGame = async function (isCustom, ksmPhrase, password) {
     $ksmInfo.password = password || "";
   }
 
+  if(ksmPhrase){
+
   $ksmCachedBalance = (await getMyBalance($ksmInfo.address)).balance;
   $ksmCachedBalanceHuman = (await getMyBalance($ksmInfo.address)).balanceHuman;
 
@@ -444,6 +446,7 @@ DataManager.setupNewGame = async function (isCustom, ksmPhrase, password) {
 
   // updating inventory
   updateInventoryWithNFTS_AutoCollections(nftItems);
+  }
 };
 
 const data_manager_load_game_alias = DataManager.loadGame;
@@ -468,8 +471,10 @@ DataManager.loadGame = async function (savefileId) {
       password: ""
     };
 
-    ksmInfoFixed = true;
+    //ksmInfoFixed = true;
   }
+
+  if(ksmInfoFixed){
 
   $ksmCachedBalance = (await getMyBalance(ksmInfo.address)).balance;
   $ksmCachedBalanceHuman = (await getMyBalance(ksmInfo.address)).balanceHuman;
@@ -482,7 +487,7 @@ DataManager.loadGame = async function (savefileId) {
   const nftItems = updateDatabaseWithNFTS_AutoCollections($ksmCachedNFT);
 
   // original loading
-  const result = await data_manager_load_game_alias.call(this, savefileId);
+  //const result = await data_manager_load_game_alias.call(this, savefileId);
 
   // try apply fixed ksm info
   if (ksmInfoFixed) {
@@ -491,7 +496,10 @@ DataManager.loadGame = async function (savefileId) {
 
   // updating inventory
   updateInventoryWithNFTS_AutoCollections(nftItems);
+  }
 
+  // original loading
+  const result = await data_manager_load_game_alias.call(this, savefileId);
   return result;
 };
 

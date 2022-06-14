@@ -1,5 +1,5 @@
 //=============================================================================
-// rmmz_sprites.js v1.3.3
+// rmmz_sprites.js v1.5.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -938,7 +938,7 @@ Sprite_Enemy.prototype.initMembers = function() {
     Sprite_Battler.prototype.initMembers.call(this);
     this._enemy = null;
     this._appeared = false;
-    this._battlerName = "";
+    this._battlerName = null;
     this._battlerHue = 0;
     this._effectType = null;
     this._effectDuration = 0;
@@ -1285,9 +1285,9 @@ Sprite_Animation.prototype.canStart = function() {
 };
 
 Sprite_Animation.prototype.shouldWaitForPrevious = function() {
-    // [Note] Effekseer is very heavy on some mobile devices, so we don't
-    //   display many effects at the same time.
-    return Utils.isMobileDevice();
+    // [Note] Older versions of Effekseer were very heavy on some mobile
+    //   devices. We don't need this anymore.
+    return false;
 };
 
 Sprite_Animation.prototype.updateEffectGeometry = function() {
@@ -2437,7 +2437,7 @@ Sprite_Gauge.prototype.measureLabelWidth = function() {
     this.setupLabelFont();
     const labels = [TextManager.hpA, TextManager.mpA, TextManager.tpA];
     const widths = labels.map(str => this.bitmap.measureTextWidth(str));
-    return Math.max(...widths);
+    return Math.ceil(Math.max(...widths));
 };
 
 Sprite_Gauge.prototype.labelOpacity = function() {
@@ -3475,8 +3475,9 @@ Spriteset_Map.prototype.updateParallax = function() {
         this._parallax.bitmap = ImageManager.loadParallax(this._parallaxName);
     }
     if (this._parallax.bitmap) {
-        this._parallax.origin.x = $gameMap.parallaxOx();
-        this._parallax.origin.y = $gameMap.parallaxOy();
+        const bitmap = this._parallax.bitmap;
+        this._parallax.origin.x = $gameMap.parallaxOx() % bitmap.width;
+        this._parallax.origin.y = $gameMap.parallaxOy() % bitmap.height;
     }
 };
 

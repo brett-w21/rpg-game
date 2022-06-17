@@ -1068,10 +1068,11 @@ Scene_NFTShop.prototype.onSellOk = function () {
   this._item = this._sellWindow.item();
   this._sellWindow.hide();
 
-  if (id == null) {
-    print("Id value not found");
-  }
-  else {
+  // if (_item.id == null) {
+  //   print("Id value not found");
+  // }
+  // else 
+  {
     if ($ksmCachedNFTOnSale.some(e => e.id === this._item.id)) {
       this._cancelNFTSellWindow.show();
       this._cancelNFTSellWindow.activate();

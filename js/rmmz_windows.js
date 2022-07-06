@@ -7,6 +7,8 @@
 //
 // The superclass of all windows within the game.
 
+var thisWindowNameInput = null;
+
 function Window_Base() {
     this.initialize(...arguments);
 }
@@ -3996,6 +3998,7 @@ Window_NameInput.JAPAN3 =
           "／","＝","＠","＜","＞",  "：","；",".","かな","決定" ];
 
 Window_NameInput.prototype.initialize = function(rect) {
+    thisWindowNameInput = this;
     Window_Selectable.prototype.initialize.call(this, rect);
     this._editWindow = null;
     this._page = 0;
@@ -4175,12 +4178,23 @@ Window_NameInput.prototype.processOk = function() {
     }
 };
 
+const unNecessaryKeyboardKeys = [8, 9, 13, 16, 17, 18, 19, 20, 27, 33, 32, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 91, 92, 93, 106, 107, 109, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121
+, 122, 123, 144, 145, 182, 183, 186, 187];
+
 window.addEventListener("keydown", function (event) {
     if (event.defaultPrevented) {
       return; // Do nothing if the event was already processed
     }
-    Window_NameInput.prototype.setKeyboardInput(event.key);
-    // Cancel the default action to avoid it being handled twice
+
+    for (let i = 0; i < unNecessaryKeyboardKeys.length; i++){
+        if(event.which == unNecessaryKeyboardKeys[i]){
+            event.preventDefault();   // turn off browser transition to the previous page 
+            return;
+        }
+    }
+
+Window_NameInput.prototype.setKeyboardInput(event.key);
+    //Cancel the default action to avoid it being handled twice
     event.preventDefault();
   }, true);
 
@@ -4189,15 +4203,11 @@ Window_NameInput.prototype.setKeyboardInput = function(String){
     var keyValue = function() {                                                                                                       
         return value;
     };
-    this._editWindow.add(keyValue());
+    thisWindowNameInput._editWindow.add(keyValue());
 }
 
 Window_NameInput.prototype.onNameAdd = function() {
     if (this._editWindow.add(this.character())) {
-        // var keyValue = function() {                                                                                                       
-        //     return "K";
-        // };
-        // this._editWindow.add(keyValue());
         this.playOkSound();
     } else {
         this.playBuzzerSound();

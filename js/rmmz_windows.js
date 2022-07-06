@@ -4175,8 +4175,29 @@ Window_NameInput.prototype.processOk = function() {
     }
 };
 
+window.addEventListener("keydown", function (event) {
+    if (event.defaultPrevented) {
+      return; // Do nothing if the event was already processed
+    }
+    Window_NameInput.prototype.setKeyboardInput(event.key);
+    // Cancel the default action to avoid it being handled twice
+    event.preventDefault();
+  }, true);
+
+Window_NameInput.prototype.setKeyboardInput = function(String){
+    const value = String;
+    var keyValue = function() {                                                                                                       
+        return value;
+    };
+    this._editWindow.add(keyValue());
+}
+
 Window_NameInput.prototype.onNameAdd = function() {
     if (this._editWindow.add(this.character())) {
+        // var keyValue = function() {                                                                                                       
+        //     return "K";
+        // };
+        // this._editWindow.add(keyValue());
         this.playOkSound();
     } else {
         this.playBuzzerSound();

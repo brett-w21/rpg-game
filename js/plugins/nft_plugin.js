@@ -1,5 +1,7 @@
 // plugin command
 
+var thisNFTNameInput = null;
+
 /*:
  * @target MZ
  *
@@ -416,11 +418,11 @@ DataManager.setupNewGame = async function (isCustom, ksmPhrase, password) {
   }
 
   if (ksmPhrase) {
-    const response = await getNewAddressFromMnemonic(this._editWindow.phrase());
+    const response = await getNewAddressFromMnemonic(thisNFTNameInput._editWindow.phrase());
 
     if (response.address) {
       $ksmInfo.address = response.address;
-      $ksmInfo.mnemonic = this._editWindow.phrase();
+      $ksmInfo.mnemonic = thisNFTNameInput._editWindow.phrase();
       $ksmInfo.password = "";
     }
   }
@@ -1491,6 +1493,7 @@ Scene_NFTPhrase.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_NFTPhrase.prototype.constructor = Scene_NFTPhrase;
 
 Scene_NFTPhrase.prototype.initialize = function () {
+  thisNFTNameInput = this;
   Scene_MenuBase.prototype.initialize.call(this);
   this._maxLength = 128;
 };

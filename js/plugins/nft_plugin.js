@@ -503,6 +503,7 @@ DataManager.loadGame = async function (savefileId) {
   // original loading
   const result = await data_manager_load_game_alias.call(this, savefileId);
   return result;
+  
 };
 
 // Update Loop
@@ -512,7 +513,7 @@ UpdateNFTLoop();
 function UpdateNFTLoop() {
   // if we are in scene title
   if (!SceneManager._scene || SceneManager._scene instanceof Scene_Title) {
-    NextUpdateNFTLoop();
+    QuickUpdateNFTLoop();
     return;
   }
 
@@ -528,6 +529,10 @@ function UpdateNFTLoop() {
 
 function NextUpdateNFTLoop() {
   setTimeout(UpdateNFTLoop, 30000);
+}
+
+function QuickUpdateNFTLoop() {
+  setTimeout(UpdateNFTLoop, 5000);
 }
 
 async function UpdateNFTLoopBody() {

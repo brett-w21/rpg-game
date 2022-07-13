@@ -1162,7 +1162,8 @@ Scene_NFTShop.prototype.onPriceInputOk = async function () {
   isSelling = true;
 
   const item = this._item;
-  const price = BigInt(this._priceEditWindow.price());
+  const price = this._priceEditWindow.price();
+  // const price = BigInt(this._priceEditWindow.price());
 
   SceneManager.push(Scene_Spinner);
   SceneManager._nextScene.setLoadingPrefix("Selling");
@@ -2052,11 +2053,17 @@ Window_PriceInput.prototype.processOk = function () {
 };
 
 Window_PriceInput.prototype.onPriceAdd = function () {
-  if (this._editWindow.add(this.character())) {
-    this.playOkSound();
-  } else {
-    this.playBuzzerSound();
+  if(this.character() == "."){
+    this.onDecimalEnter();
   }
+  else{
+    if (this._editWindow.add(this.character())) {
+      this.playOkSound();
+    } else {
+      this.playBuzzerSound();
+    }
+  }
+  
 };
 
 Window_PriceInput.prototype.onPriceOk = function () {
@@ -2073,10 +2080,22 @@ Window_PriceInput.prototype.onPriceOk = function () {
 };
 
 Window_PriceInput.prototype.onPriceClear = function () {
+  console.log(this.decimalEntered);
   if (this._editWindow.back()) {
     this.playOkSound();
   } else {
     this.playBuzzerSound();
+  }
+};
+
+Window_PriceInput.prototype.onDecimalEnter = function () {
+  console.log(this.decimalEntered);
+  if(this.decimalEntered == false){
+    this.decimalEntered = true;
+    this._editWindow.add(this.character());
+  }
+  else{
+    console.log("decimal already exists");
   }
 };
 

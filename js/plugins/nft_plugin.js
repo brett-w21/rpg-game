@@ -2080,8 +2080,11 @@ Window_PriceInput.prototype.onPriceOk = function () {
 };
 
 Window_PriceInput.prototype.onPriceClear = function () {
-  console.log(this.decimalEntered);
   if (this._editWindow.back()) {
+    let text = this._editWindow.price();
+    if(text.indexOf(".") == (-1)){
+      this.decimalEntered = false;
+    }
     this.playOkSound();
   } else {
     this.playBuzzerSound();
@@ -2093,9 +2096,6 @@ Window_PriceInput.prototype.onDecimalEnter = function () {
   if(this.decimalEntered == false){
     this.decimalEntered = true;
     this._editWindow.add(this.character());
-  }
-  else{
-    console.log("decimal already exists");
   }
 };
 

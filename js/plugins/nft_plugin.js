@@ -1870,17 +1870,19 @@ function Window_PriceInput() {
 
 Window_PriceInput.prototype = Object.create(Window_Selectable.prototype);
 Window_PriceInput.prototype.constructor = Window_PriceInput;
+Window_PriceInput.prototype.decimalEntered = new Boolean(false);
 
 // prettier-ignore
 Window_PriceInput.DIGITS =
   ["0", "1", "2", "3", "4",
-    "5", "6", "7", "8", "9",
+    "5", "6", "7", "8", "9", ".",
     "Clear", "OK"];
 
 Window_PriceInput.prototype.initialize = function (rect) {
   Window_Selectable.prototype.initialize.call(this, rect);
   this._editWindow = null;
   this._index = 0;
+  this.decimalEntered = false;
 };
 
 Window_PriceInput.prototype.setEditWindow = function (editWindow) {
@@ -1899,7 +1901,7 @@ Window_PriceInput.prototype.maxCols = function () {
 };
 
 Window_PriceInput.prototype.maxItems = function () {
-  return 12;
+  return 13;
 };
 
 Window_PriceInput.prototype.itemWidth = function () {
@@ -1911,15 +1913,16 @@ Window_PriceInput.prototype.groupSpacing = function () {
 };
 
 Window_PriceInput.prototype.character = function () {
-  return this._index < 10 ? this.table()[this._index] : "";
+  const tempValue = this._index < 11 ? this.table()[this._index] : "";
+  return tempValue;
 };
 
 Window_PriceInput.prototype.isClear = function () {
-  return this._index === 10;
+  return this._index === 11;
 };
 
 Window_PriceInput.prototype.isOk = function () {
-  return this._index === 11;
+  return this._index === 12;
 };
 
 Window_PriceInput.prototype.itemRect = function (index) {
@@ -1929,8 +1932,8 @@ Window_PriceInput.prototype.itemRect = function (index) {
   const rowSpacing = this.rowSpacing();
   const groupSpacing = this.groupSpacing();
   let col = index % this.maxCols();
-  if (index === 10) col = 3;
-  if (index === 11) col = 4;
+  if (index === 11) col = 3;
+  if (index === 12) col = 4;
   //const x = col * itemWidth + group * groupSpacing + colSpacing / 2;
   let x = col * itemWidth + 0 * groupSpacing + colSpacing / 2;
   const y = Math.floor(index / this.maxCols()) * itemHeight + rowSpacing / 2;
@@ -1967,6 +1970,11 @@ Window_PriceInput.prototype.cursorDown = function (wrap) {
   else if (this._index < 10) {
     this._index = 11;
   }
+
+  else if (this._index < 11) {
+    this._index = 12;
+  }
+
 };
 
 Window_PriceInput.prototype.cursorUp = function (wrap) {
@@ -1979,7 +1987,7 @@ Window_PriceInput.prototype.cursorUp = function (wrap) {
 };
 
 Window_PriceInput.prototype.cursorRight = function (wrap) {
-  if (this._index < 11) {
+  if (this._index < 12) {
     this._index++;
   }
 };
@@ -2018,8 +2026,8 @@ Window_PriceInput.prototype.processCancel = function () {
 };
 
 Window_PriceInput.prototype.processJump = function () {
-  if (this._index !== 11) {
-    this._index = 11;
+  if (this._index !== 12) {
+    this._index = 12;
     this.playCursorSound();
   }
 };

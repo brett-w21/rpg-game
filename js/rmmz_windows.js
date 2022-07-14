@@ -4203,7 +4203,9 @@ Window_NameInput.prototype.setKeyboardInput = function(String){
     var keyValue = function() {                                                                                                       
         return value;
     };
-    thisWindowNameInput._editWindow.add(keyValue());
+    if(thisWindowNameInput){
+        thisWindowNameInput._editWindow.add(keyValue());
+    }
 }
 
 Window_NameInput.prototype.onNameAdd = function() {

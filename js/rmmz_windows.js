@@ -28,6 +28,10 @@ Window_Base.prototype.initialize = function(rect) {
     this._opening = false;
     this._closing = false;
     this._dimmerSprite = null;
+    Window_Base._iconWidth  = 32;
+    Window_Base._iconHeight = 32;
+    Window_Base._faceWidth  = 144;
+    Window_Base._faceHeight = 144;
 };
 
 Window_Base.prototype.destroy = function(options) {

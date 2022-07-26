@@ -363,8 +363,10 @@ function timeout(ms) {
 
 // Data Manager
 
-const WEAPONS_COLLECTION = "d43593c715a56da27d-VOTS";
-const ESSENTIA_COLLECTION = "d43593c715a56da27d-ESSENTIA";
+// const WEAPONS_COLLECTION = "d43593c715a56da27d-VOTS";
+const WEAPONS_COLLECTION = "0613f928630ce21a60-TSWC";
+// const ESSENTIA_COLLECTION = "d43593c715a56da27d-ESSENTIA";
+const ESSENTIA_COLLECTION = "0613f928630ce21a60-TESS";
 
 $ksmInfo = null;
 $ksmCachedBalance = 0;

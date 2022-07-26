@@ -30,8 +30,10 @@ function KSMEndpoints() {
 }
 
 KSMEndpoints.prototype.initialize = function () {
-  this.ksmEndpoint = "ws://143.198.116.85:9944";
-  this.rmrkEndpoint = "http://143.198.116.85:3000";
+  this.ksmEndpoint = "wss://kusama-rpc.polkadot.io";
+  // this.ksmEndpoint = "ws://143.198.116.85:9944";
+  this.rmrkEndpoint = "https://rmrklistener.com/";
+  // this.rmrkEndpoint = "http://143.198.116.85:3000";
 };
 
 StorageManager.saveKSMEndpoints = function () {

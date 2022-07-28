@@ -480,7 +480,7 @@ DataManager.loadGame = async function (savefileId) {
     //ksmInfoFixed = true;
   }
 
-  if(ksmInfoFixed){
+  //if(ksmInfoFixed){
 
   $ksmCachedBalance = (await getMyBalance(ksmInfo.address)).balance;
   $ksmCachedBalanceHuman = (await getMyBalance(ksmInfo.address)).balanceHuman;
@@ -502,7 +502,7 @@ DataManager.loadGame = async function (savefileId) {
 
   // updating inventory
   updateInventoryWithNFTS_AutoCollections(nftItems);
-  }
+  //}
 
   // original loading
   const result = await data_manager_load_game_alias.call(this, savefileId);
@@ -536,7 +536,7 @@ function NextUpdateNFTLoop() {
 }
 
 function QuickUpdateNFTLoop() {
-  setTimeout(UpdateNFTLoop, 5000);
+  setTimeout(UpdateNFTLoop, 2000);
 }
 
 async function UpdateNFTLoopBody() {
@@ -800,6 +800,8 @@ Scene_ChangeRMRKEndpoint.prototype.onInputOk = async function () {
 // Scene_NFTShop
 //
 
+var NFTShopTemp = null;
+
 function Scene_NFTShop() {
   this.initialize(...arguments);
 }
@@ -809,6 +811,7 @@ Scene_NFTShop.prototype.constructor = Scene_NFTShop;
 
 Scene_NFTShop.prototype.initialize = function () {
   Scene_MenuBase.prototype.initialize.call(this);
+  NFTShopTemp = this;
 };
 
 Scene_NFTShop.prototype.create = function () {
@@ -1077,24 +1080,27 @@ Scene_NFTShop.prototype.onBuyCancel = function () {
 
 Scene_NFTShop.prototype.onSellOk = function () {
   this._item = this._sellWindow.item();
-  this._sellWindow.hide();
-
-  // if (_item.id == null) {
-  //   print("Id value not found");
-  // }
-  // else 
-  {
-    if ($ksmCachedNFTOnSale.some(e => e.id === this._item.id)) {
-      this._cancelNFTSellWindow.show();
-      this._cancelNFTSellWindow.activate();
-    } else {
+  if(this._item != null){
+    this._sellWindow.hide();
+    if (this._item.id == null) {
+      print("Id value not found");
+    }
+    else{
+      if ($ksmCachedNFTOnSale.some(e => e.id === this._item.id)) {
+        this._cancelNFTSellWindow.show();
+        this._cancelNFTSellWindow.activate();
+      } else {
       this._helpWindow.setText("Please enter the price of the item being sold");
       this._priceInputWindow.show();
       this._priceInputWindow.activate();
       this._priceEditWindow.show();
       this._priceEditWindow.clear();
+      }
     }
-  }
+  } 
+  // else {
+  //   this.activateSellWindow();
+  // }
 };
 
 Scene_NFTShop.prototype.onSellCancel = function () {
@@ -2353,7 +2359,7 @@ Window_NFTShopSell.prototype.itemAt = function (index) {
 
 Window_NFTShopSell.prototype.itemMetadata = function () {
   const item = this.itemAt(this.index());
-
+  
   console.log(item);
 
   if (!item) return null;

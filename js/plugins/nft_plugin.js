@@ -1140,7 +1140,7 @@ Scene_NFTShop.prototype.onBuyConfirmOk = async function () {
   }
   await timeout(1000);
   if (result) {
-    SceneManager._scene.setText("Purchase Successul!");
+    SceneManager._scene.setText("Purchase Successful!");
   } else {
     SceneManager._scene.setText("Insufficient KSM");
   }

@@ -216,6 +216,11 @@ function updateInventoryWithNFTS_Weapon(nftList) {
       continue;
     }
 
+    if (!isNFTOnSale_Weapon(nft.nftId)) {
+      continue;
+    }
+
+
     // adding new item
     $gameParty._weapons[nft.id] = 1;
     newItems.push(nft);
@@ -250,6 +255,13 @@ function isNFTEquipped_Weapon(nftId) {
         }
       }
     }
+  }
+  return false;
+}
+
+function isNFTOnSale_Weapon(nftId) {
+  if ($ksmCachedNFTOnSale.some(e => e.id === nftId)) {
+    return true;
   }
   return false;
 }

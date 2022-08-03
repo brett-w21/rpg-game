@@ -84,7 +84,7 @@ async function waitForInit() {
 async function getAllNFTOnSale() {
   const result = [];
   // const collections = JSON.parse(await getWhiteListedCollections());
-  const collections = JSON.parse("0613f928630ce21a60-TSWC, 0613f928630ce21a60-TESS");
+  const collections = ["0613f928630ce21a60-TSWC", "0613f928630ce21a60-TESS"];
   for (let collection of collections) {
     const list = JSON.parse(await getNftsForSale(collection));
     for (let nft of list) {

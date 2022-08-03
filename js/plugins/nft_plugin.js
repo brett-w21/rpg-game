@@ -86,7 +86,6 @@ async function getAllNFTOnSale() {
   // const collections = JSON.parse(await getWhiteListedCollections());
   const collections = JSON.parse("0613f928630ce21a60-TSWC, 0613f928630ce21a60-TESS");
   for (let collection of collections) {
-    console.log("Nice");
     const list = JSON.parse(await getNftsForSale(collection));
     for (let nft of list) {
       result.push(nft);

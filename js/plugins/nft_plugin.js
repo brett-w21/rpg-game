@@ -1895,6 +1895,7 @@ function Window_PriceInput() {
 Window_PriceInput.prototype = Object.create(Window_Selectable.prototype);
 Window_PriceInput.prototype.constructor = Window_PriceInput;
 Window_PriceInput.prototype.decimalEntered = new Boolean(false);
+Window_PriceInput.prototype.decimalCount = 0;
 
 // prettier-ignore
 Window_PriceInput.DIGITS =
@@ -1926,6 +1927,10 @@ Window_PriceInput.prototype.maxCols = function () {
 
 Window_PriceInput.prototype.maxItems = function () {
   return 13;
+};
+
+Window_PriceInput.prototype.maxNumAfterDecimal = function () {
+  return 2;
 };
 
 Window_PriceInput.prototype.itemWidth = function () {
@@ -2080,10 +2085,25 @@ Window_PriceInput.prototype.onPriceAdd = function () {
     this.onDecimalEnter();
   }
   else{
-    if (this._editWindow.add(this.character())) {
-      this.playOkSound();
-    } else {
-      this.playBuzzerSound();
+    if(this.decimalEntered){
+      if(this.decimalCount < this.maxNumAfterDecimal()){
+        this.decimalCount++;
+        if (this._editWindow.add(this.character())) {
+          this.playOkSound();
+        } else {
+          this.playBuzzerSound();
+        }
+      }
+      else{
+        this.playBuzzerSound();
+      }
+    }
+    else{
+      if (this._editWindow.add(this.character())) {
+        this.playOkSound();
+      } else {
+        this.playBuzzerSound();
+      }
     }
   }
   
@@ -2108,6 +2128,12 @@ Window_PriceInput.prototype.onPriceClear = function () {
     if(text.indexOf(".") == (-1)){
       this.decimalEntered = false;
     }
+    else{
+      this.decimalCount--;
+      if(this.decimalCount < 0){
+        this.decimalCount = 0;
+      }
+    }
     this.playOkSound();
   } else {
     this.playBuzzerSound();
@@ -2115,7 +2141,6 @@ Window_PriceInput.prototype.onPriceClear = function () {
 };
 
 Window_PriceInput.prototype.onDecimalEnter = function () {
-  console.log(this.decimalEntered);
   if(this.decimalEntered == false){
     this.decimalEntered = true;
     this._editWindow.add(this.character());

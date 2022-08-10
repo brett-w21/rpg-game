@@ -6164,7 +6164,7 @@
   var version = ''; // empty string to avoid regexp issues
   var versions = {};
   var release = {};
-  var config$3 = {};
+  var config$4 = {};
 
   function noop$4() {}
 
@@ -6241,7 +6241,7 @@
     hrtime: hrtime,
     platform: platform,
     release: release,
-    config: config$3,
+    config: config$4,
     uptime: uptime
   };
 
@@ -11717,7 +11717,7 @@
   }
 
   // Copyright 2017-2022 @polkadot/util-crypto authors & contributors
-  const config$2 = {
+  const config$3 = {
     chars: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
     coder: base58,
     ipfs: 'z',
@@ -11730,7 +11730,7 @@
    * Validates that the supplied value is valid base58, throwing exceptions if not
    */
 
-  const base58Validate = createValidate(config$2);
+  const base58Validate = createValidate(config$3);
   /**
    * @name base58Decode
    * @summary Decodes a base58 value.
@@ -11738,7 +11738,7 @@
    * From the provided input, decode the base58 and return the result as an `Uint8Array`.
    */
 
-  const base58Decode = createDecode(config$2, base58Validate);
+  const base58Decode = createDecode(config$3, base58Validate);
   /**
   * @name base58Encode
   * @summary Creates a base58 value.
@@ -11746,7 +11746,7 @@
   * From the provided input, create the base58 and return the result as a string.
   */
 
-  const base58Encode = createEncode(config$2);
+  const base58Encode = createEncode(config$3);
 
   // prettier-ignore
   const SIGMA = new Uint8Array([
@@ -17016,7 +17016,7 @@
   });
 
   // Copyright 2017-2022 @polkadot/util-crypto authors & contributors
-  const config$1 = {
+  const config$2 = {
     chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
     coder: base64,
     type: 'base64'
@@ -17028,7 +17028,7 @@
    * Validates that the supplied value is valid base64
    */
 
-  const base64Validate = createValidate(config$1);
+  const base64Validate = createValidate(config$2);
   /**
    * @name base64Decode
    * @summary Decodes a base64 value.
@@ -17036,7 +17036,7 @@
    * From the provided input, decode the base64 and return the result as an `Uint8Array`.
    */
 
-  const base64Decode = createDecode(config$1, base64Validate);
+  const base64Decode = createDecode(config$2, base64Validate);
   /**
    * @name base64Encode
    * @summary Creates a base64 value.
@@ -17044,7 +17044,7 @@
    * From the provided input, create the base64 and return the result as a string.
    */
 
-  const base64Encode = createEncode(config$1);
+  const base64Encode = createEncode(config$2);
 
   // Copyright 2017-2022 @polkadot/util-crypto authors & contributors
   function secp256k1Compress(publicKey, onlyJs) {
@@ -20755,7 +20755,7 @@
       }
   }
 
-  var config = {
+  var config$1 = {
       onUnhandledError: null,
       onStoppedNotification: null,
       Promise: undefined,
@@ -20920,7 +20920,7 @@
           }
           else {
               var context_1;
-              if (_this && config.useDeprecatedNextContext) {
+              if (_this && config$1.useDeprecatedNextContext) {
                   context_1 = Object.create(observerOrNext);
                   context_1.unsubscribe = function () { return _this.unsubscribe(); };
                   partialObserver = {
@@ -21056,7 +21056,7 @@
   }());
   function getPromiseCtor(promiseCtor) {
       var _a;
-      return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config.Promise) !== null && _a !== void 0 ? _a : Promise;
+      return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config$1.Promise) !== null && _a !== void 0 ? _a : Promise;
   }
   function isObserver(value) {
       return value && isFunction$1(value.next) && isFunction$1(value.error) && isFunction$1(value.complete);
@@ -52755,11 +52755,11 @@
   // Mark that a method should not be used.
   // Returns a modified function which warns once by default.
   // If --no-deprecation is set, then it is a no-op.
-  function deprecate(fn, msg) {
+  function deprecate$1(fn, msg) {
     // Allow for deprecating things in the process of starting up.
     if (isUndefined(global$1.process)) {
       return function() {
-        return deprecate(fn, msg).apply(this, arguments);
+        return deprecate$1(fn, msg).apply(this, arguments);
       };
     }
 
@@ -54431,7 +54431,7 @@
 
   function WritableState(options, stream) {
     Object.defineProperty(this, 'buffer', {
-      get: deprecate(function () {
+      get: deprecate$1(function () {
         return this.getBuffer();
       }, '_writableState.buffer is deprecated. Use _writableState.getBuffer ' + 'instead.')
     });
@@ -56027,79 +56027,71 @@
     getHighWaterMark: getHighWaterMark
   };
 
-  var browser;
-  var hasRequiredBrowser;
+  /**
+   * Module exports.
+   */
 
-  function requireBrowser () {
-  	if (hasRequiredBrowser) return browser;
-  	hasRequiredBrowser = 1;
-  	/**
-  	 * Module exports.
-  	 */
+  var browser = deprecate;
 
-  	browser = deprecate;
+  /**
+   * Mark that a method should not be used.
+   * Returns a modified function which warns once by default.
+   *
+   * If `localStorage.noDeprecation = true` is set, then it is a no-op.
+   *
+   * If `localStorage.throwDeprecation = true` is set, then deprecated functions
+   * will throw an Error when invoked.
+   *
+   * If `localStorage.traceDeprecation = true` is set, then deprecated functions
+   * will invoke `console.trace()` instead of `console.error()`.
+   *
+   * @param {Function} fn - the function to deprecate
+   * @param {String} msg - the string to print to the console when `fn` is invoked
+   * @returns {Function} a new "deprecated" version of `fn`
+   * @api public
+   */
 
-  	/**
-  	 * Mark that a method should not be used.
-  	 * Returns a modified function which warns once by default.
-  	 *
-  	 * If `localStorage.noDeprecation = true` is set, then it is a no-op.
-  	 *
-  	 * If `localStorage.throwDeprecation = true` is set, then deprecated functions
-  	 * will throw an Error when invoked.
-  	 *
-  	 * If `localStorage.traceDeprecation = true` is set, then deprecated functions
-  	 * will invoke `console.trace()` instead of `console.error()`.
-  	 *
-  	 * @param {Function} fn - the function to deprecate
-  	 * @param {String} msg - the string to print to the console when `fn` is invoked
-  	 * @returns {Function} a new "deprecated" version of `fn`
-  	 * @api public
-  	 */
+  function deprecate (fn, msg) {
+    if (config('noDeprecation')) {
+      return fn;
+    }
 
-  	function deprecate (fn, msg) {
-  	  if (config('noDeprecation')) {
-  	    return fn;
-  	  }
+    var warned = false;
+    function deprecated() {
+      if (!warned) {
+        if (config('throwDeprecation')) {
+          throw new Error(msg);
+        } else if (config('traceDeprecation')) {
+          console.trace(msg);
+        } else {
+          console.warn(msg);
+        }
+        warned = true;
+      }
+      return fn.apply(this, arguments);
+    }
 
-  	  var warned = false;
-  	  function deprecated() {
-  	    if (!warned) {
-  	      if (config('throwDeprecation')) {
-  	        throw new Error(msg);
-  	      } else if (config('traceDeprecation')) {
-  	        console.trace(msg);
-  	      } else {
-  	        console.warn(msg);
-  	      }
-  	      warned = true;
-  	    }
-  	    return fn.apply(this, arguments);
-  	  }
+    return deprecated;
+  }
 
-  	  return deprecated;
-  	}
+  /**
+   * Checks `localStorage` for boolean values for the given `name`.
+   *
+   * @param {String} name
+   * @returns {Boolean}
+   * @api private
+   */
 
-  	/**
-  	 * Checks `localStorage` for boolean values for the given `name`.
-  	 *
-  	 * @param {String} name
-  	 * @returns {Boolean}
-  	 * @api private
-  	 */
-
-  	function config (name) {
-  	  // accessing global.localStorage can trigger a DOMException in sandboxed iframes
-  	  try {
-  	    if (!commonjsGlobal.localStorage) return false;
-  	  } catch (_) {
-  	    return false;
-  	  }
-  	  var val = commonjsGlobal.localStorage[name];
-  	  if (null == val) return false;
-  	  return String(val).toLowerCase() === 'true';
-  	}
-  	return browser;
+  function config (name) {
+    // accessing global.localStorage can trigger a DOMException in sandboxed iframes
+    try {
+      if (!commonjsGlobal.localStorage) return false;
+    } catch (_) {
+      return false;
+    }
+    var val = commonjsGlobal.localStorage[name];
+    if (null == val) return false;
+    return String(val).toLowerCase() === 'true';
   }
 
   var _stream_writable;
@@ -56135,7 +56127,7 @@
   	/*<replacement>*/
 
   	var internalUtil = {
-  	  deprecate: requireBrowser()
+  	  deprecate: browser
   	};
   	/*</replacement>*/
 
@@ -59220,6 +59212,12 @@
               if(isBeingBought) {
                   return res()
               }
+              const { balance } = await getMyBalance(sender.address);
+
+              if(parseFloat(price) >= parseFloat(balance)) {
+                  console.log(`Insufficient Balance ${balance} to purchase an Item for ${price}`);
+                  return res()
+              }
 
               let remarks = [];
               let formattedPrice = BigInt(price*100) * BigInt(10000000000);
@@ -59238,7 +59236,7 @@
                   }
               });
           } catch(error) {
-              console.error(`Error sending : ${error}`);
+              console.error(`Error buying nft : ${error}`);
               return rej(error)
           }
       })
@@ -59250,7 +59248,7 @@
                   return rej("Not Initialized")
               }
               let remarks = [];
-              let formattedPrice = BigInt(price) * BigInt(1000000);
+              let formattedPrice = BigInt(price*100) * BigInt(10000000000);
               formattedPrice = formattedPrice.toString();
               //console.log(`Listing Item For Sale: RMRK::LIST::2.0.0::${nftId}::${formattedPrice}`)
               remarks.push(api.tx.system.remark(
@@ -59266,7 +59264,7 @@
                   }
               });
           } catch(error) {
-              console.error(`Error sending : ${error}`);
+              console.error(`Error listing nft for sale : ${error}`);
               return rej(error)
           }
       })
@@ -59290,7 +59288,7 @@
               if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
                   let array = JSON.parse(xmlHttp.responseText);
                   for(let val of array) {
-                      val.forsale = convertKsmToDisplay(val.forsale);
+                      val.forsale = convertKsmToDisplay(val.forsale) + " KSM";
                   }
                   return res(JSON.stringify(array));
               }
@@ -59498,9 +59496,6 @@
               throw new Error("Not Initialized")
           }
           const { data: { free: previousFree }, nonce: previousNonce } = await api.query.system.account(address);
-
-
-
 
           return {
               b: previousFree,

@@ -3180,3 +3180,40 @@ Scene_Title.prototype.commandContinue = async function () {
   this._commandWindow.close();
   SceneManager.push(Scene_Load);
 };
+
+// Adding new command in menu for NFT Address Copy
+const get_user_ksm_address = Window_MenuCommand.prototype.makeCommandList;
+Window_MenuCommand.prototype.makeCommandList = function () {
+  get_user_ksm_address.call(this);
+
+  const copyAddress = "copyAddress";
+  this.addCommand("Copy KSM Address", copyAddress, true);
+  this.changeCommandIndex(copyAddress, 5);
+  this.setHandler(copyAddress, copyKSMAddress);
+};
+
+async function copyKSMAddress() {
+  navigator.clipboard.writeText($ksmInfo.address);
+  SceneManager.push(Scene_Spinner);
+  Scene_Spinner.prototype.setText("KSM Address has been copied to clipboard");
+  await timeout(2000);
+  SceneManager.pop();
+}
+
+Window_MenuCommand.prototype.changeCommandIndex = function (symbol, index) {
+  if (index >= 0 && index < this._list.length) {
+    const currentIndex = this.findSymbol(symbol);
+    const currentSymbol = this._list[currentIndex];
+
+    let waitingSymbol = this._list[index];
+    for (let i = index; i < currentIndex; i++) {
+      const temp = this._list[i + 1];
+      this._list[i + 1] = waitingSymbol;
+      waitingSymbol = temp;
+    }
+
+    this._list[index] = currentSymbol;
+  } else {
+    throw new RangeError("Command index must be between 0 and " + (this._list.length - 1) + " (inclusive).");
+  }
+}

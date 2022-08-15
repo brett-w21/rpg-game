@@ -3000,6 +3000,8 @@ Window_Options.prototype.makeCommandList = function () {
 Window_Options.prototype.addKSMOptions = function () {
   this.addCommand("KSM Endpoint", "ksmEndpoint");
   this.addCommand("RMRK Endpoint", "rmrkEndpoint");
+  this.addCommand("Copy KSM Address", "copyAddress");
+  this.addCommand("Export Mnemonic Seed", "exportMnemonicSeed");
 };
 
 const window_options_draw_item_alias = Window_Options.prototype.drawItem;
@@ -3007,6 +3009,8 @@ Window_Options.prototype.drawItem = function (index) {
   switch (this.commandSymbol(index)) {
     case "ksmEndpoint":
     case "rmrkEndpoint":
+    case "copyAddress":
+    case "exportMnemonicSeed":
       const title = this.commandName(index);
       const rect = this.itemLineRect(index);
       const titleWidth = rect.width;
@@ -3029,6 +3033,12 @@ Window_Options.prototype.processOk = function () {
     case "rmrkEndpoint":
       SceneManager.push(Scene_ChangeRMRKEndpoint);
       break;
+    case "copyAddress":
+      copyKSMAddress();
+      break;
+    case "exportMnemonicSeed":
+        saveMnemonic();
+        break;
     default:
       window_options_process_ok_alias.call(this);
       break;
@@ -3181,17 +3191,6 @@ Scene_Title.prototype.commandContinue = async function () {
   SceneManager.push(Scene_Load);
 };
 
-// Adding new command in menu for NFT Address Copy
-const get_user_ksm_address = Window_MenuCommand.prototype.makeCommandList;
-Window_MenuCommand.prototype.makeCommandList = function () {
-  get_user_ksm_address.call(this);
-
-  const copyAddress = "copyAddress";
-  this.addCommand("Copy KSM Address", copyAddress, true);
-  this.changeCommandIndex(copyAddress, 5);
-  this.setHandler(copyAddress, copyKSMAddress);
-};
-
 async function copyKSMAddress() {
   navigator.clipboard.writeText($ksmInfo.address);
   SceneManager.push(Scene_Spinner);
@@ -3200,20 +3199,13 @@ async function copyKSMAddress() {
   SceneManager.pop();
 }
 
-Window_MenuCommand.prototype.changeCommandIndex = function (symbol, index) {
-  if (index >= 0 && index < this._list.length) {
-    const currentIndex = this.findSymbol(symbol);
-    const currentSymbol = this._list[currentIndex];
-
-    let waitingSymbol = this._list[index];
-    for (let i = index; i < currentIndex; i++) {
-      const temp = this._list[i + 1];
-      this._list[i + 1] = waitingSymbol;
-      waitingSymbol = temp;
-    }
-
-    this._list[index] = currentSymbol;
-  } else {
-    throw new RangeError("Command index must be between 0 and " + (this._list.length - 1) + " (inclusive).");
-  }
+async function saveMnemonic() {
+  var FileSaver = require('file-saver');
+  var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
+  console.log(FileSaver);
+  FileSaver.saveAs(blob, "hello world.txt");
+  SceneManager.push(Scene_Spinner);
+  Scene_Spinner.prototype.setText("Mnemonic Seed has been saved");
+  await timeout(2000);
+  SceneManager.pop();
 }

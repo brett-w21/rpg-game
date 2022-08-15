@@ -3944,7 +3944,7 @@ Window_NameInput.LATIN1 =
           "Z","[","]","^","_",  "z","{","}","|","~",
           "0","1","2","3","4",  "!","#","$","%","&",
           "5","6","7","8","9",  "(",")","*","+","-",
-          "/","=","@","<",">",  ":",";",".","Page","OK" ];
+          "/","=","@","<",">",  ":","Paste",".","Page","OK" ];
 // prettier-ignore
 Window_NameInput.LATIN2 =
         [ "Á","É","Í","Ó","Ú",  "á","é","í","ó","ú",
@@ -4213,11 +4213,24 @@ Window_NameInput.prototype.setKeyboardInput = function(String){
 }
 
 Window_NameInput.prototype.onNameAdd = function() {
+if(this.character() == "Paste"){
+    navigator.clipboard.readText()
+  .then(text => {
+    this._editWindow.add(text);
+    console.log('Pasted content: ', text);
+  })
+  .catch(err => {
+    console.error('Failed to read clipboard contents: ', err);
+  });
+    
+}
+else{
     if (this._editWindow.add(this.character())) {
         this.playOkSound();
     } else {
         this.playBuzzerSound();
     }
+}
 };
 
 Window_NameInput.prototype.onNameOk = function() {

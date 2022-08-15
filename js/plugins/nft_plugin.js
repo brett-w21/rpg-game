@@ -1,5 +1,6 @@
 // plugin command
 
+
 var thisNFTNameInput = null;
 
 /*:
@@ -3200,10 +3201,9 @@ async function copyKSMAddress() {
 }
 
 async function saveMnemonic() {
-  var FileSaver = require('file-saver');
-  var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
-  console.log(FileSaver);
-  FileSaver.saveAs(blob, "hello world.txt");
+  const saveAs = (_global.saveAs);
+  var blob = new Blob([$ksmInfo.mnemonic], {type: "text/plain;charset=utf-8"});
+  saveAs(blob, "Mnemonic.txt");
   SceneManager.push(Scene_Spinner);
   Scene_Spinner.prototype.setText("Mnemonic Seed has been saved");
   await timeout(2000);

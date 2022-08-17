@@ -448,8 +448,8 @@ DataManager.setupNewGame = async function (isCustom, ksmPhrase, password) {
   if (!$ksmInfo || !$ksmInfo.address) {
     const response = await getNewAddress(password);
     $ksmInfo.address = response.address;
-    $ksmInfo.mnemonic = response.mnemonic;
-    $ksmInfo.password = password || "";
+    $ksmInfo.mnemonic = password ? response.encrypted : response.mnemonic;
+    $ksmInfo.password = password ? true : false;
   }
 
   if(ksmPhrase){
@@ -3287,19 +3287,22 @@ function CheckForPass(){
 
 async function validatePassword(string){
   const tempPass = string;
-  if($ksmInfo.password != string){
-    SceneManager.push(Scene_Spinner);
-    Scene_Spinner.prototype.setText("Invalid Password");
-    await timeout(2000);
-    SceneManager.pop();
-    return;
+  if($ksmInfo.password) {
+    try {
+      const mnemonic = await decrypt($ksmInfo.mnemonic, tempPass);
+      saveMnemonic(mnemonic);
+    } catch(err) {
+      Scene_Spinner.prototype.setText('Invalid Password');
+      await timeout(2000);
+      SceneManager.pop();
+    }
   }
-  saveMnemonic();
 }
 
-async function saveMnemonic() {
+async function saveMnemonic(string) {
+  const tempValue = string;
   const saveAs = (_global.saveAs);
-  var blob = new Blob([$ksmInfo.mnemonic], {type: "text/plain;charset=utf-8"});
+  var blob = new Blob([tempValue], {type: "text/plain;charset=utf-8"});
   saveAs(blob, "Mnemonic.txt");
   SceneManager.push(Scene_Spinner);
   Scene_Spinner.prototype.setText("Mnemonic Seed has been saved");

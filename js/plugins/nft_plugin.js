@@ -399,7 +399,7 @@ function KSMInfo() {
 KSMInfo.prototype.initialize = function () {
   this.address = "";
   this.mnemonic = "";
-  this.password = "";
+  this.password = false;
 };
 
 const data_manager_create_gameobjects_alias = DataManager.createGameObjects;
@@ -441,7 +441,7 @@ DataManager.setupNewGame = async function (isCustom, ksmPhrase, password) {
     if (response.address) {
       $ksmInfo.address = response.address;
       $ksmInfo.mnemonic = thisNFTNameInput._editWindow.phrase();
-      $ksmInfo.password = "";
+      $ksmInfo.password = password ? true : false;
     }
   }
 
@@ -488,7 +488,7 @@ DataManager.loadGame = async function (savefileId) {
     ksmInfo = {
       address: response.address,
       mnemonic: response.mnemonic,
-      password: ""
+      password: password ? true : false
     };
 
     //ksmInfoFixed = true;
@@ -1112,9 +1112,9 @@ Scene_NFTShop.prototype.onSellOk = function () {
       }
     }
   } 
-  // else {
-  //   this.activateSellWindow();
-  // }
+  else {
+    SceneManager.pop();
+  }
 };
 
 Scene_NFTShop.prototype.onSellCancel = function () {
@@ -3277,7 +3277,7 @@ async function copyKSMAddress() {
 
 function CheckForPass(){
   //console.log("The Current Password is: " + $ksmInfo.password)
-  if($ksmInfo.password != ""){
+  if($ksmInfo.password){
     SceneManager.push(Scene_SeedExportPassEnter);
   }
   else{

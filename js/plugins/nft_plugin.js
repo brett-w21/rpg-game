@@ -1377,6 +1377,7 @@ Scene_SelectKSMAddress.prototype.createWindow = function () {
   this._selectNFTAddress = new Window_SelectNFTAddress(rect);
   this._selectNFTAddress.setHandler("new_ksm_address", this.commandNewKSMAddress.bind(this));
   this._selectNFTAddress.setHandler("import_ksm_address", this.commandImportKSMAddress.bind(this));
+  this._selectNFTAddress.setHandler("import_ksm_address_from_file", this.commandImportKSMAddressFromFile.bind(this));
   this._selectNFTAddress.setHandler("cancel", this.popScene.bind(this));
   this.addWindow(this._selectNFTAddress);
 };
@@ -1387,6 +1388,16 @@ Scene_SelectKSMAddress.prototype.commandNewKSMAddress = async function () {
 
 Scene_SelectKSMAddress.prototype.commandImportKSMAddress = function () {
   SceneManager.push(Scene_NFTPhrase);
+};
+
+Scene_SelectKSMAddress.prototype.commandImportKSMAddressFromFile = function () {
+  let input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = _this => {
+              let files =   Array.from(input.files);
+              console.log(files);
+          };
+    input.click();
 };
 
 //-----------------------------------------------------------------------------
@@ -2890,6 +2901,7 @@ Window_SelectNFTAddress.prototype.initialize = function (rect) {
 Window_SelectNFTAddress.prototype.makeCommandList = function () {
   this.addCommand("New KSM Address", "new_ksm_address", true);
   this.addCommand("Import KSM Address", "import_ksm_address", true);
+  this.addCommand("Import KSM Address from File", "import_ksm_address_from_file", true);
 };
 
 //-----------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 
 
 var thisNFTNameInput = null;
+var encryptedSeed = null;
 
 /*:
  * @target MZ
@@ -422,9 +423,8 @@ DataManager.extractSaveContents = function (contents) {
 };
 
 const data_manager_setup_newgame = DataManager.setupNewGame;
-DataManager.setupNewGame = async function (isCustom, ksmPhrase, password) {
+DataManager.setupNewGame = async function (isCustom, ksmPhrase, password, address = null) {
   data_manager_setup_newgame.call(this);
-
   if (!isCustom) {
     return;
   }
@@ -436,11 +436,13 @@ DataManager.setupNewGame = async function (isCustom, ksmPhrase, password) {
   }
 
   if (ksmPhrase) {
-    const response = await getNewAddressFromMnemonic(thisNFTNameInput._editWindow.phrase());
+    const response = address ?
+        { address } :
+        await getNewAddressFromMnemonic(thisNFTNameInput._editWindow.phrase())
 
     if (response.address) {
       $ksmInfo.address = response.address;
-      $ksmInfo.mnemonic = thisNFTNameInput._editWindow.phrase();
+      $ksmInfo.mnemonic = password ? ksmPhrase : thisNFTNameInput._editWindow.phrase();
       $ksmInfo.password = password ? true : false;
     }
   }
@@ -1394,8 +1396,37 @@ Scene_SelectKSMAddress.prototype.commandImportKSMAddressFromFile = function () {
   let input = document.createElement('input');
     input.type = 'file';
     input.onchange = _this => {
-              let files =   Array.from(input.files);
-              console.log(files);
+              try {
+                let files =   Array.from(input.files);
+                const { path } = files[0]
+                const fs = require('fs')
+                const file = fs.readFileSync(path, {encoding: 'ascii'})
+                const importedMnemonic = JSON.parse(file)
+                if(!importedMnemonic.hasOwnProperty('mnemonic') && !importedMnemonic.hasOwnProperty('encrypted')) {
+                  throw new Error('Invalid Seed File!')
+                }
+                if(!thisNFTNameInput) {
+                  thisNFTNameInput = {
+                    _editWindow: {
+                      phrase: () =>
+                        importedMnemonic.hasOwnProperty('mnemonic') ?
+                            importedMnemonic.mnemonic : importedMnemonic.encrypted
+                    }
+                  }
+                }
+                if(importedMnemonic.hasOwnProperty('mnemonic')) {
+                  DataManager.setupNewGame(true, importedMnemonic.mnemonic, false)
+                      .then(() => { SceneManager.goto(Scene_Map)})
+                } else {
+                  //TODO
+                  encryptedSeed = importedMnemonic.encrypted
+                  SceneManager.push(Scene_SeedImportValidatorNewGame)
+                }
+              } catch(error) {
+                SceneManager.push(Scene_Spinner);
+                Scene_Spinner.prototype.setText(error);
+                timeout(2000).then(() => SceneManager.pop())
+              }
           };
     input.click();
 };
@@ -1596,6 +1627,93 @@ Scene_SeedExportPassEnter.prototype.onInputOk = async function () {
   const tempValue = this._editWindow.encryptPassword();
   validatePassword(tempValue);
 };
+
+
+//-----------------------------------------------------------------------------
+// Scene_SeedImportValidatorNewGame
+//
+
+function Scene_SeedImportValidatorNewGame() {
+  this.initialize(...arguments);
+}
+
+Scene_SeedImportValidatorNewGame.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_SeedImportValidatorNewGame.prototype.constructor = Scene_SeedImportValidatorNewGame;
+
+Scene_SeedImportValidatorNewGame.prototype.initialize = function () {
+  Scene_MenuBase.prototype.initialize.call(this);
+  this._maxLength = 32;
+};
+
+Scene_SeedImportValidatorNewGame.prototype.prepare = function (maxLength) {
+  this._maxLength = maxLength;
+};
+
+Scene_SeedImportValidatorNewGame.prototype.create = function () {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createEditWindow();
+  this.createInputWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_SeedImportValidatorNewGame.prototype.start = function () {
+  Scene_MenuBase.prototype.start.call(this);
+  this._editWindow.refresh();
+};
+
+Scene_SeedImportValidatorNewGame.prototype.createEditWindow = function () {
+  const rect = this.editWindowRect();
+  this._editWindow = new Window_EncryptEdit(rect);
+  this._editWindow.setup("", "", this._maxLength);
+  this.addWindow(this._editWindow);
+};
+
+Scene_SeedImportValidatorNewGame.prototype.editWindowRect = function () {
+  const inputWindowHeight = this.calcWindowHeight(9, true);
+  const padding = $gameSystem.windowPadding();
+  const ww = 600;
+  const wh = ImageManager.faceHeight + padding * 2;
+  const wx = (Graphics.boxWidth - ww) / 2;
+  const wy = (Graphics.boxHeight - (wh + inputWindowHeight + 8)) / 2;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_SeedImportValidatorNewGame.prototype.createInputWindow = function () {
+  const rect = this.inputWindowRect();
+  this._inputWindow = new Window_NameInput(rect);
+  this._inputWindow.isKSMInput = true;
+  this._inputWindow.setEditWindow(this._editWindow);
+  this._inputWindow.setHandler("ok", this.onInputOk.bind(this));
+  this.addWindow(this._inputWindow);
+};
+
+Scene_SeedImportValidatorNewGame.prototype.inputWindowRect = function () {
+  const wx = this._editWindow.x;
+  const wy = this._editWindow.y + this._editWindow.height + 8;
+  const ww = this._editWindow.width;
+  const wh = this.calcWindowHeight(9, true);
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_SeedImportValidatorNewGame.prototype.onInputOk = async function () {
+  try {
+    const password = this._editWindow.encryptPassword();
+    const mnemonic = await decrypt(encryptedSeed, password);
+    const { address } = await getNewAddressFromMnemonic(mnemonic)
+    DataManager.setupNewGame(true, encryptedSeed, true, address)
+      .then(() => { SceneManager.goto(Scene_Map)})
+  } catch(error) {
+    SceneManager.push(Scene_Spinner);
+    Scene_Spinner.prototype.setText("Invalid Password!");
+    await timeout(2000);
+    SceneManager.pop();
+  }
+};
+
 
 //-----------------------------------------------------------------------------
 // Scene_NFTPhrase
@@ -3302,17 +3420,21 @@ function CheckForPass(){
   }
 }
 
-async function validatePassword(password){
+async function validatePassword(password, saveDecrypted = true){
   if($ksmInfo.password) {
     try {
       const mnemonic = await decrypt($ksmInfo.mnemonic, password);
-      await saveDecryptedMnemonic(JSON.stringify({mnemonic}));
+      if(saveDecrypted) {
+        await saveDecryptedMnemonic(JSON.stringify({mnemonic}));
+      }
+      return true;
     } catch(err) {
       Scene_Spinner.prototype.setText('Invalid Password');
       await timeout(2000);
       SceneManager.pop();
     }
   }
+  return false;
 }
 
 async function saveDecryptedMnemonic(string) {

@@ -3286,16 +3286,15 @@ function CheckForPass(){
     SceneManager.push(Scene_SeedExportPassEnter);
   }
   else{
-    saveDecryptedMnemonic();
+    saveMnemonic(JSON.stringify({mnemonic: $ksmInfo.mnemonic}));
   }
 }
 
-async function validatePassword(string){
-  const tempPass = string;
+async function validatePassword(password){
   if($ksmInfo.password) {
     try {
-      const mnemonic = await decrypt($ksmInfo.mnemonic, tempPass);
-      saveDecryptedMnemonic(mnemonic);
+      const mnemonic = await decrypt($ksmInfo.mnemonic, password);
+      await saveMnemonic(JSON.stringify({mnemonic}));
     } catch(err) {
       Scene_Spinner.prototype.setText('Invalid Password');
       await timeout(2000);
@@ -3307,21 +3306,11 @@ async function validatePassword(string){
 async function saveDecryptedMnemonic(string) {
   const tempValue = string;
   const saveAs = (_global.saveAs);
-  var blob = new Blob([tempValue], {type: "text/plain;charset=utf-8"});
-  saveAs(blob, "Decrypted Mnemonic.txt");
+  const blob = new Blob([tempValue], {type: "text/json;charset=utf-8"});
+  const date = new Date().toLocaleDateString('en-US');
+  saveAs(blob, `veil-of-time-${date}-mnemonic.json`);
   SceneManager.push(Scene_Spinner);
-  Scene_Spinner.prototype.setText("Mnemonic Seed has been saved");
-  await timeout(2000);
-  SceneManager.pop();
-}
-
-async function saveEncryptedMnemonic() {
-  const tempValue = $ksmInfo.mnemonic;
-  const saveAs = (_global.saveAs);
-  var blob = new Blob([tempValue], {type: "text/plain;charset=utf-8"});
-  saveAs(blob, "Encrypted Mnemonic.txt");
-  SceneManager.push(Scene_Spinner);
-  Scene_Spinner.prototype.setText("Mnemonic Seed has been saved");
+  Scene_Spinner.prototype.setText("Seed has been exported!");
   await timeout(2000);
   SceneManager.pop();
 }

@@ -3077,7 +3077,8 @@ Window_Options.prototype.addKSMOptions = function () {
   this.addCommand("KSM Endpoint", "ksmEndpoint");
   this.addCommand("RMRK Endpoint", "rmrkEndpoint");
   this.addCommand("Copy KSM Address", "copyAddress");
-  this.addCommand("Export Mnemonic Seed", "exportMnemonicSeed");
+  this.addCommand("Export Encrypted Mnemonic Seed", "exportEncMnemonicSeed");
+  this.addCommand("Export Decrypted Mnemonic Seed", "exportDecMnemonicSeed");
 };
 
 const window_options_draw_item_alias = Window_Options.prototype.drawItem;
@@ -3086,7 +3087,8 @@ Window_Options.prototype.drawItem = function (index) {
     case "ksmEndpoint":
     case "rmrkEndpoint":
     case "copyAddress":
-    case "exportMnemonicSeed":
+    case "exportEncMnemonicSeed":
+    case "exportDecMnemonicSeed":
       const title = this.commandName(index);
       const rect = this.itemLineRect(index);
       const titleWidth = rect.width;
@@ -3112,7 +3114,10 @@ Window_Options.prototype.processOk = function () {
     case "copyAddress":
       copyKSMAddress();
       break;
-    case "exportMnemonicSeed":
+    case "exportEncMnemonicSeed":
+      saveEncryptedMnemonic();
+      break;
+    case "exportDecMnemonicSeed":
       CheckForPass();
       break;
     default:
@@ -3281,7 +3286,7 @@ function CheckForPass(){
     SceneManager.push(Scene_SeedExportPassEnter);
   }
   else{
-    saveMnemonic();
+    saveDecryptedMnemonic();
   }
 }
 
@@ -3290,7 +3295,7 @@ async function validatePassword(string){
   if($ksmInfo.password) {
     try {
       const mnemonic = await decrypt($ksmInfo.mnemonic, tempPass);
-      saveMnemonic(mnemonic);
+      saveDecryptedMnemonic(mnemonic);
     } catch(err) {
       Scene_Spinner.prototype.setText('Invalid Password');
       await timeout(2000);
@@ -3299,11 +3304,22 @@ async function validatePassword(string){
   }
 }
 
-async function saveMnemonic(string) {
+async function saveDecryptedMnemonic(string) {
   const tempValue = string;
   const saveAs = (_global.saveAs);
   var blob = new Blob([tempValue], {type: "text/plain;charset=utf-8"});
-  saveAs(blob, "Mnemonic.txt");
+  saveAs(blob, "Decrypted Mnemonic.txt");
+  SceneManager.push(Scene_Spinner);
+  Scene_Spinner.prototype.setText("Mnemonic Seed has been saved");
+  await timeout(2000);
+  SceneManager.pop();
+}
+
+async function saveEncryptedMnemonic() {
+  const tempValue = $ksmInfo.mnemonic;
+  const saveAs = (_global.saveAs);
+  var blob = new Blob([tempValue], {type: "text/plain;charset=utf-8"});
+  saveAs(blob, "Encrypted Mnemonic.txt");
   SceneManager.push(Scene_Spinner);
   Scene_Spinner.prototype.setText("Mnemonic Seed has been saved");
   await timeout(2000);

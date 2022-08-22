@@ -3316,7 +3316,7 @@ async function saveDecryptedMnemonic(string) {
 }
 
 async function saveEncryptedMnemonic() {
-  const tempValue = $ksmInfo.mnemonic;
+  const tempValue = JSON.stringify({ encrypted: $ksmInfo.mnemonic });
   const saveAs = (_global.saveAs);
   const blob = new Blob([tempValue], {type: "text/json;charset=utf-8"});
   const date = new Date().toLocaleDateString('en-US');

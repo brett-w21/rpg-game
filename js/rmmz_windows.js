@@ -3944,7 +3944,7 @@ Window_NameInput.LATIN1 =
           "Z","[","]","^","_",  "z","{","}","|","~",
           "0","1","2","3","4",  "!","#","$","%","&",
           "5","6","7","8","9",  "(",")","*","+","-",
-          "/","=","@","<",">",  ":","Paste",".","Page","OK" ];
+          "","","",".",",",  "Space","Clear","Paste","Page","OK" ];
 // prettier-ignore
 Window_NameInput.LATIN2 =
         [ "Á","É","Í","Ó","Ú",  "á","é","í","ó","ú",
@@ -4182,7 +4182,7 @@ Window_NameInput.prototype.processOk = function() {
     }
 };
 
-const unNecessaryKeyboardKeys = [8, 9, 13, 16, 17, 18, 19, 20, 27, 33, 32, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 91, 92, 93, 106, 107, 109, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121
+const unNecessaryKeyboardKeys = [9, 13, 16, 17, 18, 19, 20, 27, 32, 33, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 91, 92, 93, 106, 107, 109, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121
 , 122, 123, 144, 145, 182, 183, 186, 187];
 
 window.addEventListener("keydown", function (event) {
@@ -4197,18 +4197,23 @@ window.addEventListener("keydown", function (event) {
         }
     }
 
-Window_NameInput.prototype.setKeyboardInput(event.key);
+    Window_NameInput.prototype.setKeyboardInput(event.key);
     //Cancel the default action to avoid it being handled twice
     event.preventDefault();
-  }, true);
+}, true);
 
 Window_NameInput.prototype.setKeyboardInput = function(String){
     const value = String;
+    console.log(value);
     var keyValue = function() {                                                                                                       
         return value;
     };
     if(thisWindowNameInput){
-        thisWindowNameInput._editWindow.add(keyValue());
+        if(value == "Backspace"){
+            thisWindowNameInput._editWindow.back();
+        } else{
+            thisWindowNameInput._editWindow.add(keyValue());
+        }
     }
 }
 
@@ -4222,8 +4227,24 @@ if(this.character() == "Paste"){
   .catch(err => {
     console.error('Failed to read clipboard contents: ', err);
   });
-    
 }
+
+else if(this.character() == "Space"){
+    if (this._editWindow.add(" ")) {
+        this.playOkSound();
+    } else {
+        this.playBuzzerSound();
+    }
+}
+
+else if(this.character() == "Clear"){
+    if (this._editWindow.back()) {
+        this.playOkSound();
+    } else {
+        this.playBuzzerSound();
+    }
+}
+
 else{
     if (this._editWindow.add(this.character())) {
         this.playOkSound();

@@ -3,6 +3,7 @@
 
 var thisNFTNameInput = null;
 var encryptedSeed = null;
+var exportSeedEncrypt = true;
 
 /*:
  * @target MZ
@@ -1649,8 +1650,11 @@ Scene_SeedExportPassEnter.prototype.inputWindowRect = function () {
 };
 
 Scene_SeedExportPassEnter.prototype.onInputOk = async function () {
-  const tempValue = this._editWindow.encryptPassword();
-  validatePassword(tempValue);
+  const enteredPassword = this._editWindow.encryptPassword();
+  await validatePasswordAndExport(enteredPassword);
+  SceneManager.pop();
+  SceneManager.pop();
+  SceneManager.pop();
 };
 
 //-----------------------------------------------------------------------------
@@ -1690,11 +1694,25 @@ Scene_SeedExportPassConfirmation.prototype.createWindow = function () {
 };
 
 Scene_SeedExportPassConfirmation.prototype.commandYes = async function () {
-  CheckForPass();
+  exportSeedEncrypt = true;
+  if($ksmInfo.password) {
+    await validatePasswordAndExport(null, true, true);
+    SceneManager.pop();
+    SceneManager.pop();
+  } else {
+    SceneManager.push(Scene_SeedExportPassEnter);
+  }
 };
 
 Scene_SeedExportPassConfirmation.prototype.commandNo = async function () {
-  saveEncryptedMnemonic();
+  exportSeedEncrypt = false;
+  if($ksmInfo.password) {
+    SceneManager.push(Scene_SeedExportPassEnter);
+  } else {
+    await validatePasswordAndExport(null, false, false);
+    SceneManager.pop();
+    SceneManager.pop();
+  }
 };
 
 
@@ -3726,49 +3744,38 @@ async function copyKSMAddress() {
   SceneManager.pop();
 }
 
-function CheckForPass(){
-  //console.log("The Current Password is: " + $ksmInfo.password)
-  if($ksmInfo.password){
-    SceneManager.push(Scene_SeedExportPassEnter);
-  }
-  else{
-    saveDecryptedMnemonic(JSON.stringify({mnemonic: $ksmInfo.mnemonic}));
-  }
-}
-
-async function validatePassword(password, saveDecrypted = true){
-  if($ksmInfo.password) {
-    try {
+async function validatePasswordAndExport(password, isEncrypted = $ksmInfo.password, exportEncrypted = exportSeedEncrypt){
+  try {
+    if(isEncrypted && !exportEncrypted) { //We will decrypt this and store plaintext
       const mnemonic = await decrypt($ksmInfo.mnemonic, password);
-      if(saveDecrypted) {
-        await saveDecryptedMnemonic(JSON.stringify({mnemonic}));
-      }
-      return true;
-    } catch(err) {
-      Scene_Spinner.prototype.setText('Invalid Password');
-      await timeout(2000);
-      SceneManager.pop();
+      await saveMnemonic(mnemonic, false);
+    } else if(isEncrypted && exportEncrypted) { //We will export ciphertext as is
+      await saveMnemonic($ksmInfo.mnemonic, true);
+    } else if(!isEncrypted && !exportEncrypted) { //We will export plaintext as is
+      await saveMnemonic($ksmInfo.mnemonic, false);
+    } else {  //We will encrypt mnemonic and store ciphertext
+      const encrypted = await encrypt($ksmInfo.mnemonic, password);
+      await saveMnemonic(encrypted, true);
     }
+  } catch(error) {
+    console.error(error)
+    SceneManager.push(Scene_Spinner);
+    const text = `${isEncrypted && !exportEncrypted ? "Invalid Password!" : "Failed To Save!"}`
+    Scene_Spinner.prototype.setText(text);
+    await timeout(2000);
+    SceneManager.pop();
   }
-  return false;
 }
 
-async function saveDecryptedMnemonic(string) {
-  const tempValue = string;
+async function saveMnemonic(data, isEncrypted) {
+  const outJson = {};
+  if(isEncrypted) {
+    outJson['encrypted'] = data;
+  } else {
+    outJson['mnemonic'] = data;
+  }
   const saveAs = (_global.saveAs);
-  const blob = new Blob([tempValue], {type: "text/json;charset=utf-8"});
-  const date = new Date().toLocaleDateString('en-US');
-  saveAs(blob, `veil-of-time-${date}-mnemonic.json`);
-  SceneManager.push(Scene_Spinner);
-  Scene_Spinner.prototype.setText("Seed has been exported!");
-  await timeout(2000);
-  SceneManager.pop();
-}
-
-async function saveEncryptedMnemonic() {
-  const tempValue = JSON.stringify({ encrypted: $ksmInfo.mnemonic });
-  const saveAs = (_global.saveAs);
-  const blob = new Blob([tempValue], {type: "text/json;charset=utf-8"});
+  const blob = new Blob([JSON.stringify(outJson)], {type: "text/json;charset=utf-8"});
   const date = new Date().toLocaleDateString('en-US');
   saveAs(blob, `veil-of-time-${date}-mnemonic.json`);
   SceneManager.push(Scene_Spinner);

@@ -3545,8 +3545,10 @@ Window_Options.prototype.makeCommandList = function () {
 Window_Options.prototype.addKSMOptions = function () {
   this.addCommand("KSM Endpoint", "ksmEndpoint");
   this.addCommand("RMRK Endpoint", "rmrkEndpoint");
-  this.addCommand("Copy KSM Address", "copyAddress");
-  this.addCommand("Export Mnemonic Seed", "exportMnemonicSeed");
+  if($ksmInfo.mnemonic){
+    this.addCommand("Copy KSM Address", "copyAddress");
+    this.addCommand("Export Mnemonic Seed", "exportMnemonicSeed");
+  }
 };
 
 const window_options_draw_item_alias = Window_Options.prototype.drawItem;

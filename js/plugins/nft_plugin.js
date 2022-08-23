@@ -999,7 +999,14 @@ Scene_NFTShop.prototype.priceEditWindowRect = function () {
 Scene_NFTShop.prototype.createCancelNFTSellWindow = function () {
   const rect = this.cancelNFTSellWindowRect();
   this._cancelNFTSellWindow = new Window_CancelNFTSell(rect);
-  this._cancelNFTSellWindow.setHandler("ok", this.showNFTCancelPass.bind(this));
+
+  if($ksmInfo.password) {
+    console.log('user has set a password, binding to nft cancel/sell pass input window');
+    this._cancelNFTSellWindow.setHandler("ok", this.showNFTCancelPass.bind(this));
+  } else {
+      this._cancelNFTSellWindow.setHandler("ok", this.onCancelNFTSellOk.bind(this));
+  }
+
   this._cancelNFTSellWindow.setHandler("cancel", this.onCancelNFTSellCancel.bind(this));
   this._cancelNFTSellWindow.hide();
   this.addWindow(this._cancelNFTSellWindow);
@@ -1037,7 +1044,11 @@ Scene_NFTShop.prototype.createBuyConfirmWindow = function () {
   this._buyConfirmWindow = new Window_NFTBuyConfirm(rect);
   this._buyConfirmWindow.hide();
   // this._buyConfirmWindow.setHandler("ok", this.onBuyConfirmOk.bind(this));
-  this._buyConfirmWindow.setHandler("ok", this.showNFTPurchasePass.bind(this));
+  if($ksmInfo.password) {
+    this._buyConfirmWindow.setHandler("ok", this.showNFTPurchasePass.bind(this));
+  } else {
+     this._buyConfirmWindow.setHandler("ok", this.onBuyConfirmOk.bind(this));
+  }
   this._buyConfirmWindow.setHandler("cancel", this.onBuyConfirmCancel.bind(this));
   this.addWindow(this._buyConfirmWindow);
 };
@@ -1142,12 +1153,12 @@ Scene_NFTShop.prototype.onCategoryCancel = function () {
   this._sellWindow.hide();
 };
 
-Scene_NFTShop.prototype.onBuyConfirmOk = async function () {
+Scene_NFTShop.prototype.onBuyConfirmOk = async function (decryptedMnemonic = null) {
   isBuying = true;
 
   SceneManager.push(Scene_Spinner);
   SceneManager._nextScene.setLoadingPrefix("Buying");
-  let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
+  let signer = await getNewAddressFromMnemonic(decryptedMnemonic ? decryptedMnemonic : $ksmInfo.mnemonic);
   let result = false;
   let error = "";
   try {
@@ -1186,7 +1197,7 @@ Scene_NFTShop.prototype.onBuyConfirmCancel = function () {
   this._buyWindow.activate();
 };
 
-Scene_NFTShop.prototype.onPriceInputOk = async function () {
+Scene_NFTShop.prototype.onPriceInputOk = async function (decryptedMnemonic = null) {
   isSelling = true;
 
   const item = this._item;
@@ -1195,7 +1206,7 @@ Scene_NFTShop.prototype.onPriceInputOk = async function () {
 
   SceneManager.push(Scene_Spinner);
   SceneManager._nextScene.setLoadingPrefix("Selling");
-  let signer = await getNewAddressFromMnemonic($ksmInfo.mnemonic);
+  let signer = await getNewAddressFromMnemonic(decryptedMnemonic ? decryptedMnemonic : $ksmInfo.mnemonic);
   let result = false;
   let error = "";
   try {
@@ -1229,7 +1240,7 @@ Scene_NFTShop.prototype.onPriceInputOk = async function () {
   isSelling = false;
 };
 
-Scene_NFTShop.prototype.onCancelNFTSellOk = async function () {
+Scene_NFTShop.prototype.onCancelNFTSellOk = async function (decryptedMnemonic = null) {
   const item = this._item;
 
   SceneManager.push(Scene_Spinner);
@@ -1801,8 +1812,8 @@ Scene_NFTBuyValidate.prototype.inputWindowRect = function () {
 Scene_NFTBuyValidate.prototype.onInputOk = async function () {
   try {
     const password = this._editWindow.encryptPassword();
-    await decrypt($ksmInfo.mnemonic, password);
-    Scene_NFTShop.prototype.onBuyConfirmOk();
+    const mnemonic = await decrypt($ksmInfo.mnemonic, password);
+    Scene_NFTShop.prototype.onBuyConfirmOk(mnemonic);
   } catch(error) {
     console.log(error);
     SceneManager.push(Scene_Spinner);
@@ -1885,8 +1896,8 @@ Scene_NFTSellValidate.prototype.inputWindowRect = function () {
 Scene_NFTSellValidate.prototype.onInputOk = async function () {
   try {
     const password = this._editWindow.encryptPassword();
-    await decrypt($ksmInfo.mnemonic, password);
-    Scene_NFTShop.prototype.onPriceInputOk();
+    const mnemonic = await decrypt($ksmInfo.mnemonic, password);
+    Scene_NFTShop.prototype.onPriceInputOk(mnemonic);
   } catch(error) {
     console.log(error);
     SceneManager.push(Scene_Spinner);
@@ -1969,8 +1980,8 @@ Scene_NFTSaleCancelValidate.prototype.inputWindowRect = function () {
 Scene_NFTSaleCancelValidate.prototype.onInputOk = async function () {
   try {
     const password = this._editWindow.encryptPassword();
-    await decrypt($ksmInfo.mnemonic, password);
-    Scene_NFTShop.prototype.onCancelNFTSellOk();
+    const mnemonic = await decrypt($ksmInfo.mnemonic, password);
+    Scene_NFTShop.prototype.onCancelNFTSellOk(mnemonic);
   } catch(error) {
     console.log(error);
     SceneManager.push(Scene_Spinner);

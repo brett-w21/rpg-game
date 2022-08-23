@@ -1653,6 +1653,50 @@ Scene_SeedExportPassEnter.prototype.onInputOk = async function () {
   validatePassword(tempValue);
 };
 
+//-----------------------------------------------------------------------------
+// Scene_SeedExportPassConfirmation
+//
+
+function Scene_SeedExportPassConfirmation() {
+  this.initialize(...arguments);
+}
+
+Scene_SeedExportPassConfirmation.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_SeedExportPassConfirmation.prototype.constructor = Scene_SeedExportPassConfirmation;
+
+Scene_SeedExportPassConfirmation.prototype.initialize = function () {
+  Scene_MenuBase.prototype.initialize.call(this);
+};
+
+Scene_SeedExportPassConfirmation.prototype.create = function () {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_SeedExportPassConfirmation.prototype.createWindow = function () {
+  const width = 450;
+  const height = 170;
+  const rect = new Rectangle(Graphics.boxWidth / 2 - width / 2, Graphics.boxHeight - height - 125, width, height);
+  this._encryptConfirm = new Window_EncryptConfirm(rect);
+  this._encryptConfirm.setMessage("Export with Password?");
+  this._encryptConfirm.setHandler("yes", this.commandYes.bind(this));
+  this._encryptConfirm.setHandler("cancel", this.commandNo.bind(this));
+  this.addWindow(this._encryptConfirm);
+};
+
+Scene_SeedExportPassConfirmation.prototype.commandYes = async function () {
+  CheckForPass();
+};
+
+Scene_SeedExportPassConfirmation.prototype.commandNo = async function () {
+  saveEncryptedMnemonic();
+};
+
 
 //-----------------------------------------------------------------------------
 // Scene_SeedImportValidatorNewGame
@@ -3484,8 +3528,7 @@ Window_Options.prototype.addKSMOptions = function () {
   this.addCommand("KSM Endpoint", "ksmEndpoint");
   this.addCommand("RMRK Endpoint", "rmrkEndpoint");
   this.addCommand("Copy KSM Address", "copyAddress");
-  this.addCommand("Export Encrypted Mnemonic Seed", "exportEncMnemonicSeed");
-  this.addCommand("Export Decrypted Mnemonic Seed", "exportDecMnemonicSeed");
+  this.addCommand("Export Mnemonic Seed", "exportMnemonicSeed");
 };
 
 const window_options_draw_item_alias = Window_Options.prototype.drawItem;
@@ -3494,8 +3537,7 @@ Window_Options.prototype.drawItem = function (index) {
     case "ksmEndpoint":
     case "rmrkEndpoint":
     case "copyAddress":
-    case "exportEncMnemonicSeed":
-    case "exportDecMnemonicSeed":
+    case "exportMnemonicSeed":
       const title = this.commandName(index);
       const rect = this.itemLineRect(index);
       const titleWidth = rect.width;
@@ -3521,11 +3563,8 @@ Window_Options.prototype.processOk = function () {
     case "copyAddress":
       copyKSMAddress();
       break;
-    case "exportEncMnemonicSeed":
-      saveEncryptedMnemonic();
-      break;
-    case "exportDecMnemonicSeed":
-      CheckForPass();
+    case "exportMnemonicSeed":
+      SceneManager.push(Scene_SeedExportPassConfirmation);
       break;
     default:
       window_options_process_ok_alias.call(this);

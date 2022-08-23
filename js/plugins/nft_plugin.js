@@ -967,7 +967,8 @@ Scene_NFTShop.prototype.createPriceInputWindow = function () {
   this._priceInputWindow = new Window_PriceInput(rect);
   this._priceInputWindow.hide();
   this._priceInputWindow.setEditWindow(this._priceEditWindow);
-  this._priceInputWindow.setHandler("ok", this.onPriceInputOk.bind(this));
+  // this._priceInputWindow.setHandler("ok", this.onPriceInputOk.bind(this));
+  this._priceInputWindow.setHandler("ok", this.showNFTSellPass.bind(this));
   this.addWindow(this._priceInputWindow);
 };
 
@@ -998,7 +999,7 @@ Scene_NFTShop.prototype.priceEditWindowRect = function () {
 Scene_NFTShop.prototype.createCancelNFTSellWindow = function () {
   const rect = this.cancelNFTSellWindowRect();
   this._cancelNFTSellWindow = new Window_CancelNFTSell(rect);
-  this._cancelNFTSellWindow.setHandler("ok", this.onCancelNFTSellOk.bind(this));
+  this._cancelNFTSellWindow.setHandler("ok", this.showNFTCancelPass.bind(this));
   this._cancelNFTSellWindow.setHandler("cancel", this.onCancelNFTSellCancel.bind(this));
   this._cancelNFTSellWindow.hide();
   this.addWindow(this._cancelNFTSellWindow);
@@ -1035,7 +1036,8 @@ Scene_NFTShop.prototype.createBuyConfirmWindow = function () {
   const rect = this.buyConfirmWindowRect();
   this._buyConfirmWindow = new Window_NFTBuyConfirm(rect);
   this._buyConfirmWindow.hide();
-  this._buyConfirmWindow.setHandler("ok", this.onBuyConfirmOk.bind(this));
+  // this._buyConfirmWindow.setHandler("ok", this.onBuyConfirmOk.bind(this));
+  this._buyConfirmWindow.setHandler("ok", this.showNFTPurchasePass.bind(this));
   this._buyConfirmWindow.setHandler("cancel", this.onBuyConfirmCancel.bind(this));
   this.addWindow(this._buyConfirmWindow);
 };
@@ -1269,6 +1271,18 @@ Scene_NFTShop.prototype.onCancelNFTSellCancel = function () {
   this._sellWindow.show();
   this._sellWindow.activate();
 };
+
+Scene_NFTShop.prototype.showNFTPurchasePass = function(){
+  SceneManager.push(Scene_NFTBuyValidate);
+}
+
+Scene_NFTShop.prototype.showNFTSellPass = function(){
+  SceneManager.push(Scene_NFTSellValidate);
+}
+
+Scene_NFTShop.prototype.showNFTCancelPass = function(){
+  SceneManager.push(Scene_NFTSaleCancelValidate);
+}
 
 //-----------------------------------------------------------------------------
 // Scene_Spinner
@@ -1707,6 +1721,258 @@ Scene_SeedImportValidatorNewGame.prototype.onInputOk = async function () {
     DataManager.setupNewGame(true, encryptedSeed, true, address)
       .then(() => { SceneManager.goto(Scene_Map)})
   } catch(error) {
+    SceneManager.push(Scene_Spinner);
+    Scene_Spinner.prototype.setText("Invalid Password!");
+    await timeout(2000);
+    SceneManager.pop();
+  }
+};
+
+//-----------------------------------------------------------------------------
+// Scene_NFTBuyValidate
+//
+
+function Scene_NFTBuyValidate() {
+  this.initialize(...arguments);
+}
+
+Scene_NFTBuyValidate.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_NFTBuyValidate.prototype.constructor = Scene_NFTBuyValidate;
+
+Scene_NFTBuyValidate.prototype.initialize = function () {
+  Scene_MenuBase.prototype.initialize.call(this);
+  this._maxLength = 32;
+};
+
+Scene_NFTBuyValidate.prototype.prepare = function (maxLength) {
+  this._maxLength = maxLength;
+};
+
+Scene_NFTBuyValidate.prototype.create = function () {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createEditWindow();
+  this.createInputWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_NFTBuyValidate.prototype.start = function () {
+  Scene_MenuBase.prototype.start.call(this);
+  this._editWindow.refresh();
+};
+
+Scene_NFTBuyValidate.prototype.createEditWindow = function () {
+  const rect = this.editWindowRect();
+  this._editWindow = new Window_EncryptEdit(rect);
+  this._editWindow.setup("", "", this._maxLength);
+  this.addWindow(this._editWindow);
+};
+
+Scene_NFTBuyValidate.prototype.editWindowRect = function () {
+  const inputWindowHeight = this.calcWindowHeight(9, true);
+  const padding = $gameSystem.windowPadding();
+  const ww = 600;
+  const wh = ImageManager.faceHeight + padding * 2;
+  const wx = (Graphics.boxWidth - ww) / 2;
+  const wy = (Graphics.boxHeight - (wh + inputWindowHeight + 8)) / 2;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTBuyValidate.prototype.createInputWindow = function () {
+  const rect = this.inputWindowRect();
+  this._inputWindow = new Window_NameInput(rect);
+  this._inputWindow.isKSMInput = true;
+  this._inputWindow.setEditWindow(this._editWindow);
+  this._inputWindow.setHandler("ok", this.onInputOk.bind(this));
+  this.addWindow(this._inputWindow);
+};
+
+Scene_NFTBuyValidate.prototype.inputWindowRect = function () {
+  const wx = this._editWindow.x;
+  const wy = this._editWindow.y + this._editWindow.height + 8;
+  const ww = this._editWindow.width;
+  const wh = this.calcWindowHeight(9, true);
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTBuyValidate.prototype.onInputOk = async function () {
+  try {
+    const password = this._editWindow.encryptPassword();
+    await decrypt($ksmInfo.mnemonic, password);
+    Scene_NFTShop.prototype.onBuyConfirmOk();
+  } catch(error) {
+    console.log(error);
+    SceneManager.push(Scene_Spinner);
+    Scene_Spinner.prototype.setText("Invalid Password!");
+    await timeout(2000);
+    SceneManager.pop();
+  }
+};
+
+//-----------------------------------------------------------------------------
+// Scene_NFTSellValidate
+//
+
+function Scene_NFTSellValidate() {
+  this.initialize(...arguments);
+}
+
+Scene_NFTSellValidate.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_NFTSellValidate.prototype.constructor = Scene_NFTSellValidate;
+
+Scene_NFTSellValidate.prototype.initialize = function () {
+  Scene_MenuBase.prototype.initialize.call(this);
+  this._maxLength = 32;
+};
+
+Scene_NFTSellValidate.prototype.prepare = function (maxLength) {
+  this._maxLength = maxLength;
+};
+
+Scene_NFTSellValidate.prototype.create = function () {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createEditWindow();
+  this.createInputWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_NFTSellValidate.prototype.start = function () {
+  Scene_MenuBase.prototype.start.call(this);
+  this._editWindow.refresh();
+};
+
+Scene_NFTSellValidate.prototype.createEditWindow = function () {
+  const rect = this.editWindowRect();
+  this._editWindow = new Window_EncryptEdit(rect);
+  this._editWindow.setup("", "", this._maxLength);
+  this.addWindow(this._editWindow);
+};
+
+Scene_NFTSellValidate.prototype.editWindowRect = function () {
+  const inputWindowHeight = this.calcWindowHeight(9, true);
+  const padding = $gameSystem.windowPadding();
+  const ww = 600;
+  const wh = ImageManager.faceHeight + padding * 2;
+  const wx = (Graphics.boxWidth - ww) / 2;
+  const wy = (Graphics.boxHeight - (wh + inputWindowHeight + 8)) / 2;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTSellValidate.prototype.createInputWindow = function () {
+  const rect = this.inputWindowRect();
+  this._inputWindow = new Window_NameInput(rect);
+  this._inputWindow.isKSMInput = true;
+  this._inputWindow.setEditWindow(this._editWindow);
+  this._inputWindow.setHandler("ok", this.onInputOk.bind(this));
+  this.addWindow(this._inputWindow);
+};
+
+Scene_NFTSellValidate.prototype.inputWindowRect = function () {
+  const wx = this._editWindow.x;
+  const wy = this._editWindow.y + this._editWindow.height + 8;
+  const ww = this._editWindow.width;
+  const wh = this.calcWindowHeight(9, true);
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTSellValidate.prototype.onInputOk = async function () {
+  try {
+    const password = this._editWindow.encryptPassword();
+    await decrypt($ksmInfo.mnemonic, password);
+    Scene_NFTShop.prototype.onPriceInputOk();
+  } catch(error) {
+    console.log(error);
+    SceneManager.push(Scene_Spinner);
+    Scene_Spinner.prototype.setText("Invalid Password!");
+    await timeout(2000);
+    SceneManager.pop();
+  }
+};
+
+//-----------------------------------------------------------------------------
+// Scene_NFTSaleCancelValidate
+//
+
+function Scene_NFTSaleCancelValidate() {
+  this.initialize(...arguments);
+}
+
+Scene_NFTSaleCancelValidate.prototype = Object.create(Scene_MenuBase.prototype);
+Scene_NFTSaleCancelValidate.prototype.constructor = Scene_NFTSaleCancelValidate;
+
+Scene_NFTSaleCancelValidate.prototype.initialize = function () {
+  Scene_MenuBase.prototype.initialize.call(this);
+  this._maxLength = 32;
+};
+
+Scene_NFTSaleCancelValidate.prototype.prepare = function (maxLength) {
+  this._maxLength = maxLength;
+};
+
+Scene_NFTSaleCancelValidate.prototype.create = function () {
+  Scene_MenuBase.prototype.create.call(this);
+
+  this.createEditWindow();
+  this.createInputWindow();
+  this._cancelButton.setClickHandler(() => {
+    SoundManager.playCancel();
+    SceneManager.pop();
+  });
+};
+
+Scene_NFTSaleCancelValidate.prototype.start = function () {
+  Scene_MenuBase.prototype.start.call(this);
+  this._editWindow.refresh();
+};
+
+Scene_NFTSaleCancelValidate.prototype.createEditWindow = function () {
+  const rect = this.editWindowRect();
+  this._editWindow = new Window_EncryptEdit(rect);
+  this._editWindow.setup("", "", this._maxLength);
+  this.addWindow(this._editWindow);
+};
+
+Scene_NFTSaleCancelValidate.prototype.editWindowRect = function () {
+  const inputWindowHeight = this.calcWindowHeight(9, true);
+  const padding = $gameSystem.windowPadding();
+  const ww = 600;
+  const wh = ImageManager.faceHeight + padding * 2;
+  const wx = (Graphics.boxWidth - ww) / 2;
+  const wy = (Graphics.boxHeight - (wh + inputWindowHeight + 8)) / 2;
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTSaleCancelValidate.prototype.createInputWindow = function () {
+  const rect = this.inputWindowRect();
+  this._inputWindow = new Window_NameInput(rect);
+  this._inputWindow.isKSMInput = true;
+  this._inputWindow.setEditWindow(this._editWindow);
+  this._inputWindow.setHandler("ok", this.onInputOk.bind(this));
+  this.addWindow(this._inputWindow);
+};
+
+Scene_NFTSaleCancelValidate.prototype.inputWindowRect = function () {
+  const wx = this._editWindow.x;
+  const wy = this._editWindow.y + this._editWindow.height + 8;
+  const ww = this._editWindow.width;
+  const wh = this.calcWindowHeight(9, true);
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+Scene_NFTSaleCancelValidate.prototype.onInputOk = async function () {
+  try {
+    const password = this._editWindow.encryptPassword();
+    await decrypt($ksmInfo.mnemonic, password);
+    Scene_NFTShop.prototype.onCancelNFTSellOk();
+  } catch(error) {
+    console.log(error);
     SceneManager.push(Scene_Spinner);
     Scene_Spinner.prototype.setText("Invalid Password!");
     await timeout(2000);

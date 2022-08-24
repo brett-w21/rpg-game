@@ -2843,6 +2843,8 @@ Window_NFTShopBuy.prototype.drawItem = function (index) {
   this.changePaintOpacity(this.isEnabled(item));
   this.drawItemName(itemMetadata, rect.x, rect.y, nameWidth);
   this.drawText(price, priceX, rect.y, priceWidth, "right");
+  const iconSize = 30;
+  this.drawIconWithSize(itemMetadata.iconIndex, 10, 7 + (index * 42), iconSize, iconSize);
   this.changePaintOpacity(true);
 };
 
@@ -2991,6 +2993,8 @@ Window_NFTShopSell.prototype.drawItem = function (index) {
   const nameWidth = rect.width - 100;
   this.changePaintOpacity(this.isEnabled(item));
   this.drawItemName(itemMetadata, rect.x, rect.y, nameWidth);
+  const iconSize = 30;
+  this.drawIconWithSize(itemMetadata.iconIndex, 10, 7 + (index * 42), iconSize, iconSize);
   if ($ksmCachedNFTOnSale.some(e => e.id === item.id)) {
     this.drawText("Selling", rect.width - 100, rect.y, 100);
   }
